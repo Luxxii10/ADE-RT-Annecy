@@ -79,7 +79,7 @@ document.getElementById('go').onclick=async()=>{
   const r1=await essai('url', W+'?url='+encodeURIComponent(u1));
   if(!r1.ok) log('Erreur réseau/CORS : '+r1.err+' ('+r1.temps+')','ko');
   else{
-    log(`HTTP ${r1.status} en ${r1.temps}, ${r1.corps.length} octets, ${nbEv(r1.corps)} cours, CORS=${r1.h.cors}`);
+    log(`HTTP ${r1.status} en ${r1.temps}, ${r1.corps.length} octets, ${nbEv(r1.corps)} cours`);
     verdict(r1.status===200 && nbEv(r1.corps)>0, 'le flux revient avec des cours');
   }
 
@@ -99,7 +99,7 @@ document.getElementById('go').onclick=async()=>{
   let j3=null;
   if(!r3.ok) log('Erreur réseau/CORS : '+r3.err+' ('+r3.temps+')','ko');
   else{
-    log(`HTTP ${r3.status} en ${r3.temps}, ${r3.corps.length} octets, Cache-Control=${r3.h.cc}, CORS=${r3.h.cors}`);
+    log(`HTTP ${r3.status} en ${r3.temps}, ${r3.corps.length} octets, Cache-Control=${r3.h.cc}`);
     try{ j3=JSON.parse(r3.corps); }catch(e){ log('Réponse non JSON : '+r3.corps.slice(0,200),'ko'); }
     if(j3?.erreur) log('Erreur du Worker : '+j3.erreur,'ko');
     if(j3?.cal){
@@ -110,6 +110,26 @@ document.getElementById('go').onclick=async()=>{
       log(`${total} cours aujourd'hui au total, ${vides.length} ressource(s) sans cours aujourd'hui`);
       const nom=id=>[...Object.values(C.GROUPS).flat()].find(x=>String(x.id)===String(id))?.nom||id;
       cles.filter(k=>nbEv(j3.cal[k])).slice(0,6).forEach(k=>log(`   ${nom(k)} : ${nbEv(j3.cal[k])} cours`));
+    }
+  }
+
+  // 3 bis. Un jour de cours (prochain jour de semaine), pour vérifier les cours eux-mêmes
+  {
+    const d=new Date(); do{ d.setDate(d.getDate()+1); }while(d.getDay()===0||d.getDay()===6);
+    const jourCours=new Intl.DateTimeFormat('fr-CA',{timeZone:'Europe/Paris'}).format(d);
+    log(`\n— 3 bis. GET /dispo pour le prochain jour de semaine (${jourCours})`);
+    const r=await essai('dispoJ', `${W}dispo?ids=${ids.join(',')}&date=${jourCours}&data=${C.ICAL_DATA}&projectId=${C.PROJECT_ID}`, {cache:'no-store'});
+    if(!r.ok) log('Erreur réseau/CORS : '+r.err,'ko');
+    else{
+      let j=null; try{ j=JSON.parse(r.corps); }catch(e){}
+      const cles=Object.keys(j?.cal||{}), total=cles.reduce((s,k)=>s+nbEv(j.cal[k]),0);
+      log(`HTTP ${r.status} en ${r.temps}, ${r.corps.length} octets, ${total} cours au total`);
+      verdict(total>0, 'des cours reviennent pour un jour de semaine');
+      const nom=id=>[...Object.values(C.GROUPS).flat()].find(x=>String(x.id)===String(id))?.nom||id;
+      cles.filter(k=>nbEv(j.cal[k])).slice(0,8).forEach(k=>{
+        const deb=(j.cal[k].match(/DTSTART[^:]*:(\S+)/)||[])[1]||'?';
+        log(`   ${nom(k)} : ${nbEv(j.cal[k])} cours, premier DTSTART ${deb}`);
+      });
     }
   }
 
