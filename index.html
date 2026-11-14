@@ -6013,15 +6013,54 @@ function checkRoomAvailability(){
   });
 }
 
-async function fetchRoomAvailability(){
-  if(window._edtFetchEnCours) return;   // laisser passer le chargement de l'EDT
-  for(const salle of GROUPS.salles){
-    try{roomEvents[salle.id]=parseIcal(await fetchWithProxies(buildIcalUrl([salle.id])));}
-    catch(e){roomEvents[salle.id]=[];}
-  }
-  checkRoomAvailability();
+/* ------------------------------------------------------------
+   CHARGEMENT DES VOYANTS — un seul appel /dispo au Worker
+   Avant : 34 téléchargements de l'année entière (un par salle, prof,
+   groupe) toutes les 5 à 10 min et par appli ouverte, soit l'essentiel
+   du quota gratuit Cloudflare avec 150 utilisateurs.
+   Maintenant : un appel qui renvoie seulement la journée, resservi
+   5 min, et rien tant que l'onglet est caché.
+   Repli si le Worker ne répond pas : l'ancienne méthode, flux par flux
+   via les proxies publics, mais limitée à la journée.
+   ------------------------------------------------------------ */
+const DISPO_INTERVALLE = ()=> (window._ecoMode?20:10)*60*1000;
+let _dispoCharge=0, _dispoEnCours=null;
+function dateParisISO(){ return new Intl.DateTimeFormat('fr-CA',{timeZone:'Europe/Paris'}).format(new Date()); }
+function idsDispo(){
+  return [...GROUPS.salles, ...GROUPS.profs, ...GROUP_KEYS_TO_WATCH.flatMap(gk=>GROUPS[gk]||[])].map(x=>x.id);
 }
-setInterval(fetchRoomAvailability, (window._ecoMode?15:5)*60*1000);
+function rangerDispo(id, events){
+  if(GROUPS.salles.some(x=>x.id===id)) roomEvents[id]=events;
+  else if(GROUPS.profs.some(x=>x.id===id)) profEvents[id]=events;
+  else groupEvents[id]=events;
+}
+async function chargerDispo(force){
+  if(window._edtFetchEnCours) return;            // laisser passer le chargement de l'EDT
+  if(_dispoEnCours) return _dispoEnCours;
+  if(!force && Date.now()-_dispoCharge < 60*1000) return;
+  _dispoEnCours=(async()=>{
+    const ids=idsDispo(), date=dateParisISO();
+    try{
+      const u=`${CF_WORKER}dispo?ids=${ids.join(',')}&date=${date}&data=${ICAL_DATA}&projectId=${PROJECT_ID}`;
+      const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),15000);
+      const r=await fetch(u,{signal:ctrl.signal}); clearTimeout(t);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const j=await r.json();
+      ids.forEach(id=>{ const txt=j.cal?.[id]; rangerDispo(id, txt?parseIcal(txt):[]); });
+    }catch(e){
+      // Repli : flux par flux, journée seulement
+      for(const id of ids){
+        const url=`${ICAL_BASE}?data=${ICAL_DATA}&resources=${id}&projectId=${PROJECT_ID}&calType=ical&firstDate=${date}&lastDate=${date}`;
+        try{ rangerDispo(id, parseIcal(await fetchWithProxies(url))); }catch(err){ rangerDispo(id, []); }
+      }
+    }
+    _dispoCharge=Date.now();
+    checkRoomAvailability(); checkProfAvailability(); checkGroupAvailability();
+  })();
+  try{ await _dispoEnCours; } finally { _dispoEnCours=null; }
+}
+// Noms historiques, encore appelés ailleurs (armerLedsDispo…)
+function fetchRoomAvailability(){ return chargerDispo(); }
 
 /* ============================================================
    PROF AVAILABILITY — LED verte si en cours / trou, rouge sinon
@@ -6129,16 +6168,8 @@ function checkProfAvailability() {
   });
 }
 
-async function fetchProfAvailability() {
-  if(window._edtFetchEnCours) return;
-  for (const prof of GROUPS.profs) {
-    try { profEvents[prof.id] = parseIcal(await fetchWithProxies(buildIcalUrl([prof.id]))); }
-    catch(e) { profEvents[prof.id] = []; }
-  }
-  checkProfAvailability();
-}
+function fetchProfAvailability(){ return chargerDispo(); }
 setInterval(checkProfAvailability, (window._ecoMode?3:1)*60*1000);
-setInterval(fetchProfAvailability, (window._ecoMode?30:10)*60*1000);
 
 /* ============================================================
    GROUP AVAILABILITY — même système que les profs pour RT1/2/3/alt
@@ -6212,18 +6243,15 @@ function checkGroupAvailability() {
   });
 }
 
-async function fetchGroupAvailability() {
-  if(window._edtFetchEnCours) return;
-  for (const gk of GROUP_KEYS_TO_WATCH) {
-    for (const grp of GROUPS[gk]) {
-      try { groupEvents[grp.id] = parseIcal(await fetchWithProxies(buildIcalUrl([grp.id]))); }
-      catch(e) { groupEvents[grp.id] = []; }
-    }
-  }
-  checkGroupAvailability();
-}
+function fetchGroupAvailability(){ return chargerDispo(); }
 setInterval(checkGroupAvailability, (window._ecoMode?3:1)*60*1000);
-setInterval(fetchGroupAvailability, (window._ecoMode?30:10)*60*1000);
+setInterval(checkRoomAvailability, (window._ecoMode?3:1)*60*1000);
+// Rechargement : toutes les 10 min (20 en mode éco), jamais onglet caché ;
+// au retour sur l'appli, si les voyants ont plus de 10 min.
+setInterval(()=>{ if(!document.hidden) chargerDispo(); }, DISPO_INTERVALLE());
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden && Date.now()-_dispoCharge > DISPO_INTERVALLE()) chargerDispo();
+});
 
 // Démarrage des LED de disponibilité. Différé de 2,5 s : si l'utilisateur
 // charge un favori dès l'ouverture, sa requête part en premier.
