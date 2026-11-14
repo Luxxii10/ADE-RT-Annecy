@@ -1,3 +1,3 @@
-les to-do listes sont maintenant visibles sans aller dans le menu (c'est pratique pour vos dates cisco)
-[BUTTON]ok :3[/BUTTON]
+le site est maintenant une webapp (PWA) donc si vous avez l'appli d'installé vous pouvez consulter votre emploi de temps hors ligne ;)
+[BUTTON]YAAAAAAY (´▽`ʃ♡ƪ)[/BUTTON]
 [TITLE]Le president[/TITLE]
