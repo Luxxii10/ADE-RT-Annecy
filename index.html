@@ -2978,6 +2978,128 @@ header.topbar .toggle-wrap{position:static;}
 .ios-glyphe{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:5px;
   border:1px solid var(--line);font-size:13px;vertical-align:-6px;margin:0 2px;}
 
+/* ============================================================
+   FEUILLE (bottom sheet) — fiche d'un cours
+   Téléphone : feuille qui monte du bas, deux hauteurs (≈60 % et 92 %),
+   poignée 32×4 dans une zone de 48 px, coins 16 px, voile 32 %.
+   Ordinateur : la même fiche en popover près du clic.
+   ============================================================ */
+.fl-voile{
+  position:fixed;inset:0;z-index:1500;background:rgba(6,8,10,.32);
+  opacity:0;transition:opacity .3s ease;touch-action:none;
+}
+.fl-voile.vis{opacity:1;}
+/* 32 % (Material) ne se voit pas sur un fond déjà sombre */
+[data-theme="dark"] .fl-voile:not(.fl-pop){background:rgba(0,0,0,.55);}
+.fl{
+  position:fixed;left:0;right:0;bottom:0;z-index:1501;margin:0 auto;max-width:640px;
+  max-height:92svh;display:flex;flex-direction:column;
+  background:var(--surf);border:1px solid var(--line);border-bottom:0;
+  border-radius:16px 16px 0 0;box-shadow:var(--ombre-flottant);
+  transform:translateY(100%);will-change:transform;outline:none;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.fl-poignee{flex-shrink:0;height:22px;display:grid;place-items:center;cursor:grab;touch-action:none;}
+.fl-poignee::before{content:'';width:32px;height:4px;border-radius:2px;background:var(--line);}
+.fl-corps{overflow:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;flex:1;min-height:0;}
+.fl[data-etat="grand"] .fl-corps{overflow-y:auto;}
+.fl[data-etat="moyen"] .fl-corps{touch-action:none;}
+/* Ordinateur : popover */
+.fl.fl-pop{
+  left:auto;right:auto;bottom:auto;margin:0;width:min(380px,calc(100vw - 24px));
+  max-height:min(80vh,620px);border-radius:10px;border-bottom:1px solid var(--line);
+  transform:none;padding-bottom:0;animation:pxModalIn .35s var(--spring-soft) backwards;
+}
+.fl.fl-pop .fl-poignee{display:none;}
+.fl.fl-pop .fl-corps{overflow-y:auto;}
+.fl-voile.fl-pop{background:transparent;}
+html.fl-ouverte,html.fl-ouverte body{overflow:hidden;}
+
+/* Fiche cours */
+.fc{padding:4px 18px 20px;}
+.fl.fl-pop .fc{padding-top:16px;}
+.fc-haut{display:flex;align-items:flex-start;gap:10px;}
+.fc-tags{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0;}
+.fc-tag{
+  font:600 11px var(--f-mono);letter-spacing:.04em;padding:3px 7px;border-radius:4px;
+  border:1px solid var(--border);color:var(--text2);background:var(--bg2);
+}
+.fc-tag.type{border-color:hsl(var(--evh) 55% 50% / .5);color:var(--text);box-shadow:inset 3px 0 0 hsl(var(--evh) 62% 48%);}
+.fc-tag.exam{background:var(--bad);border-color:var(--bad);color:#fff;}
+.fc-tag.ne{border-style:dashed;}
+.fc-fermer{
+  flex-shrink:0;width:36px;height:36px;margin:-4px -8px 0 0;border-radius:8px;border:0;
+  background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;
+}
+.fc-fermer:hover{background:var(--surf2);color:var(--text);}
+.fc-titre{font-size:19px;line-height:1.3;font-weight:600;letter-spacing:-.01em;margin:10px 0 6px;color:var(--text);overflow-wrap:anywhere;}
+.fc-quand{font:500 13.5px var(--f-mono);color:var(--text2);font-variant-numeric:tabular-nums;}
+.fc-rel{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;font-size:12px;
+  background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--text);}
+.fc-rel.encours{background:color-mix(in srgb,var(--ok) 18%,transparent);}
+.fc-lignes{margin:14px -18px 0;border-top:1px solid var(--border);}
+.fc-ligne{
+  display:flex;align-items:center;gap:14px;min-height:48px;padding:8px 18px;
+  border-bottom:1px solid var(--border);color:var(--text);
+}
+.fc-ligne .px{color:var(--muted);flex-shrink:0;}
+.fc-ligne-lbl{font:500 10.5px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);width:46px;flex-shrink:0;}
+.fc-ligne-val{flex:1;min-width:0;font-size:15px;overflow-wrap:anywhere;}
+.fc-ligne-val.salle{font:600 20px var(--f-mono);letter-spacing:-.01em;}
+.fc-ligne-val.detail{font-size:13px;color:var(--text2);white-space:pre-line;line-height:1.45;}
+.fc-action{margin-left:auto;flex-shrink:0;}
+.fc-section{margin-top:18px;}
+.fc-sec-tete{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.fc-sec-titre{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.fc-sec-compte{font:500 12px var(--f-mono);color:var(--text2);}
+.fc-tache{display:flex;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid var(--border);}
+.fc-tache input[type=checkbox]{width:22px;height:22px;flex-shrink:0;accent-color:var(--acc);}
+.fc-tache label{flex:1;min-width:0;font-size:15px;line-height:1.35;overflow-wrap:anywhere;cursor:pointer;padding:10px 0;}
+.fc-tache.fait label{text-decoration:line-through;color:var(--muted);}
+.fc-tache-suppr{width:40px;height:40px;flex-shrink:0;border:0;background:none;color:var(--muted);border-radius:8px;cursor:pointer;display:grid;place-items:center;}
+.fc-vide{font-size:13px;color:var(--muted);padding:6px 0 4px;}
+.fc-ajout{display:flex;gap:8px;margin-top:10px;}
+.fc-ajout input,.fc-note{
+  flex:1;min-width:0;font:400 16px var(--f-ui);color:var(--text);
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:11px 12px;outline:none;
+}
+.fc-ajout input:focus,.fc-note:focus{border-color:var(--acc);}
+.fc-ajout button{min-width:48px;border-radius:8px;}
+.fc-note{display:block;width:100%;min-height:96px;resize:none;line-height:1.45;field-sizing:content;max-height:40svh;}
+.fc-note-etat{font:400 11.5px var(--f-mono);color:var(--muted);min-height:16px;margin-top:6px;}
+
+/* ── Les autres fenêtres deviennent des feuilles sur téléphone ── */
+@media(max-width:700px){
+  .modal-overlay.open,.exam-overlay.open,.free-overlay.open,.stats-overlay.open,
+  .week-note-overlay.open,.annonce-overlay.open{align-items:flex-end !important;padding:0 !important;}
+  /* « html » devant : passe avant la règle « tout ce qui flotte » de la refonte 2, déclarée plus bas */
+  html .modal-overlay .modal,html .modal-overlay .modal-box,html .exam-modal,html .free-overlay > *,html .stats-overlay > *,
+  html .week-note-overlay > *,html .annonce-overlay > *{
+    width:100% !important;max-width:none !important;margin:0 !important;
+    max-height:92svh !important;border-radius:16px 16px 0 0 !important;border-bottom:0 !important;
+    padding-bottom:max(12px,env(safe-area-inset-bottom)) !important;
+    animation:flMonte .45s cubic-bezier(.32,.72,0,1) backwards !important;
+    overflow-y:auto;overscroll-behavior:contain;position:relative;
+  }
+  /* Poignée dessinée en haut de chaque feuille */
+  .modal-overlay .modal::before,.modal-overlay .modal-box::before,.exam-modal::before,
+  .free-overlay > *::before,.stats-overlay > *::before,.week-note-overlay > *::before,.annonce-overlay > *::before{
+    content:'';display:block;width:32px;height:4px;border-radius:2px;background:var(--line);
+    margin:9px auto 3px;position:sticky;top:9px;z-index:3;
+  }
+  /* Cibles tactiles dans les feuilles */
+  .exam-modal button,.free-overlay button,.stats-overlay button,.week-note-overlay button,.modal-box button{min-height:44px;}
+  .wn-item,.ev-checklist .wn-item{min-height:44px;}
+  input,textarea,select{font-size:16px !important;}
+}
+@keyframes flMonte{from{transform:translateY(100%);}}
+
+/* Réglages tactiles globaux */
+button,a,.card,.tab,.cal-event,.sc-jour,.fav-chip{touch-action:manipulation;}
+@media(hover:none){
+  .card:hover,.fav-chip:hover,.cal-event:hover,.btn-main:hover:not(:disabled){transform:none;box-shadow:none;}
+}
+
 /* ── Palette Ctrl+K ── */
 .tb-cmdk{
   display:inline-flex;align-items:center;gap:7px;padding:7px 9px 7px 10px;
@@ -10005,6 +10127,294 @@ if(typeof renderCalendar==='function'){
   renderCalendar=function(...a){ const r=rendu2.apply(this,a); majBoutonHorsLigne(); return r; };
 }
 majBoutonHorsLigne();
+
+/* ============================================================
+   FEUILLE — moteur de bottom sheet (téléphone) / popover (ordinateur)
+   Valeurs reprises de Vaul et de Material 3 : fermer si le doigt part
+   vers le bas à plus de 0,4 px/ms ou au-delà de 25 % ; 10 px avant de
+   considérer qu'on glisse ; courbe d'iOS cubic-bezier(.32,.72,0,1).
+   Le contenu ne défile qu'en grande hauteur (comme expandToScroll
+   d'Ionic) ; en haut du contenu, tirer vers le bas reprend la feuille.
+   Le bouton retour du téléphone ferme la feuille.
+   ============================================================ */
+const FL_MOBILE=matchMedia('(max-width:700px)');
+const FL_COURBE='cubic-bezier(.32,.72,0,1)';
+let _fl=null;
+
+function flOuvrir(html, {label='', x=0, y=0, onClose=null}={}){
+  const remplace=_fl;
+  if(_fl) flFermer({remplacer:true});
+  const voile=document.createElement('div'); voile.className='fl-voile';
+  const el=document.createElement('section'); el.className='fl'; el.tabIndex=-1;
+  el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true');
+  if(label) el.setAttribute('aria-label',label);
+  el.innerHTML=`<div class="fl-poignee" role="button" tabindex="0" aria-label="Agrandir ou réduire la fiche"></div><div class="fl-corps">${html}</div>`;
+  document.body.append(voile, el);
+  const mobile=FL_MOBILE.matches;
+  _fl={el, voile, onClose, mobile, retour:document.activeElement, pousse:remplace?.pousse||false, off:0, H:0, offMoyen:0};
+  voile.addEventListener('click',()=>flFermer());
+  el.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.stopPropagation(); flFermer(); } });
+  if(mobile){
+    document.documentElement.classList.add('fl-ouverte');
+    if(!_fl.pousse){ history.pushState({fl:1},''); _fl.pousse=true; }
+    flMesurer();
+    el.style.transform=`translateY(${_fl.H}px)`;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ voile.classList.add('vis'); flAller(_fl.offMoyen>0?'moyen':'grand',true); }));
+    flGlisser(el);
+    el.querySelector('.fl-poignee').addEventListener('click',()=>flAller(_fl.etat==='grand' && _fl.offMoyen>0?'moyen':'grand',true));
+    // Un champ qui prend le focus a besoin de place : grande hauteur
+    el.addEventListener('focusin',e=>{ if(e.target.matches('input,textarea')) flAller('grand',true); });
+  } else {
+    el.classList.add('fl-pop'); voile.classList.add('fl-pop','vis');
+    const w=el.offsetWidth, h=el.offsetHeight;
+    let L=x+14, T=y+14;
+    if(L+w>innerWidth-12) L=Math.max(12,x-w-14);
+    if(T+h>innerHeight-12) T=Math.max(12,innerHeight-h-12);
+    el.style.left=L+'px'; el.style.top=T+'px';
+  }
+  setTimeout(()=>el.focus({preventScroll:true}),0);
+  return el;
+}
+// Popover : le contenu (tâches, icônes) arrive après le placement ; on recale
+function flRecaler(){
+  if(!_fl || _fl.mobile) return;
+  // offset* et pas getBoundingClientRect : l'animation d'entrée réduit la fiche à 96 %
+  const el=_fl.el, h=el.offsetHeight, w=el.offsetWidth;
+  if(el.offsetTop+h>innerHeight-12) el.style.top=Math.max(12, innerHeight-12-h)+'px';
+  if(el.offsetLeft+w>innerWidth-12) el.style.left=Math.max(12, innerWidth-12-w)+'px';
+}
+function flMesurer(){
+  if(!_fl) return;
+  _fl.H=_fl.el.offsetHeight;
+  const moyen=Math.min(_fl.H, Math.round(innerHeight*.6));
+  _fl.offMoyen=_fl.H-moyen;
+}
+function flAller(etat, anim){
+  if(!_fl || !_fl.mobile) return;
+  if(etat==='moyen' && _fl.offMoyen<=0) etat='grand';
+  const off=etat==='grand'?0:_fl.offMoyen;
+  _fl.el.style.transition=anim?`transform .5s ${FL_COURBE}`:'none';
+  _fl.el.style.transform=`translateY(${off}px)`;
+  _fl.off=off; _fl.etat=etat; _fl.el.dataset.etat=etat;
+  _fl.voile.style.transition=anim?'opacity .3s':'none'; _fl.voile.style.opacity='';
+}
+function flFermer({remplacer=false, depuisRetour=false}={}){
+  if(!_fl) return;
+  const f=_fl; _fl=null;
+  if(f.mobile){
+    f.el.style.transition=`transform .35s ${FL_COURBE}`;
+    f.el.style.transform=`translateY(${f.H||f.el.offsetHeight}px)`;
+    f.voile.style.transition='opacity .25s'; f.voile.style.opacity='0';
+    setTimeout(()=>{ f.el.remove(); f.voile.remove(); },360);
+    if(!remplacer){
+      document.documentElement.classList.remove('fl-ouverte');
+      if(f.pousse && !depuisRetour) history.back();
+    }
+  } else { f.el.remove(); f.voile.remove(); }
+  if(!remplacer){ try{ f.retour?.focus?.({preventScroll:true}); }catch(e){} }
+  f.onClose?.();
+}
+addEventListener('popstate',()=>{ if(_fl) flFermer({depuisRetour:true}); });
+// Clavier virtuel : la feuille reste au-dessus (iOS ignore interactive-widget)
+window.visualViewport?.addEventListener('resize',()=>{
+  if(!_fl?.mobile) return;
+  const vv=visualViewport, clavier=Math.max(0, innerHeight-vv.height-vv.offsetTop);
+  _fl.el.style.bottom=clavier+'px';
+  _fl.el.style.maxHeight=`${Math.round((vv.height)*.92)}px`;
+});
+
+function flGlisser(el){
+  const corps=el.querySelector('.fl-corps');
+  let actif=false, demarre=false, y0=0, base=0, dernierY=0, dernierT=0, v=0;
+  const debut=(y, surPoignee)=>{
+    if(!_fl) return false;
+    if(!surPoignee && _fl.etat==='grand' && corps.scrollTop>0) return false;
+    actif=true; demarre=false; y0=dernierY=y; dernierT=performance.now(); base=_fl.off; v=0;
+    return true;
+  };
+  const bouger=(y)=>{
+    if(!actif || !_fl) return false;
+    const dy=y-y0;
+    if(!demarre){
+      if(Math.abs(dy)<10) return false;
+      // En grande hauteur, vers le haut, c'est le contenu qui défile
+      if(dy<0 && _fl.etat==='grand'){ actif=false; return false; }
+      demarre=true; el.style.transition='none';
+    }
+    const t=performance.now(); v=(y-dernierY)/Math.max(1,t-dernierT); dernierY=y; dernierT=t;
+    let off=base+dy;
+    if(off<0) off=-8*(Math.log(-off+1));        // résistance au-delà du haut
+    el.style.transform=`translateY(${off}px)`;
+    _fl.off=off;
+    _fl.voile.style.opacity=String(Math.max(0,Math.min(1,1-(off-_fl.offMoyen)/Math.max(1,_fl.H-_fl.offMoyen))));
+    return true;
+  };
+  const finir=()=>{
+    if(!actif || !_fl){ actif=false; return; }
+    actif=false;
+    if(!demarre) return;
+    const off=_fl.off, seuil=_fl.offMoyen+(_fl.H-_fl.offMoyen)*.25;
+    if(v>2 || off>seuil || (v>.4 && (_fl.etat==='moyen' || _fl.offMoyen<=0))) flFermer();
+    else if(v>.4 || off>_fl.offMoyen*.5) flAller('moyen',true);
+    else flAller('grand',true);
+  };
+  // Tactile : non passif pour pouvoir prendre la main sur le défilement
+  el.addEventListener('touchstart',e=>{
+    if(e.target.closest('input,textarea,button,label,select,a')) return;
+    debut(e.touches[0].clientY, !!e.target.closest('.fl-poignee'));
+  },{passive:true});
+  el.addEventListener('touchmove',e=>{ if(bouger(e.touches[0].clientY)) e.preventDefault(); },{passive:false});
+  el.addEventListener('touchend',finir); el.addEventListener('touchcancel',finir);
+  // Souris (et émulation) : mêmes règles
+  el.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='touch' || e.button!==0) return;
+    if(e.target.closest('input,textarea,button,label,select,a')) return;
+    if(debut(e.clientY, !!e.target.closest('.fl-poignee'))) el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove',e=>{ if(e.pointerType!=='touch') bouger(e.clientY); });
+  el.addEventListener('pointerup',e=>{ if(e.pointerType!=='touch') finir(); });
+}
+
+/* ============================================================
+   FICHE D'UN COURS
+   Ordre repris de Google Agenda / Todoist : étiquettes, titre complet,
+   horaire + durée + « dans 3 h », puis une ligne par information
+   (salle en grand), puis les tâches (compteur 1/2) et la note, qui
+   s'enregistre toute seule. Visible à mi-hauteur : tout sauf la note.
+   ============================================================ */
+const JOURS_LONGS=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+const MOIS_C=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+function dureeTexte(min){ const h=Math.floor(min/60), m=min%60; return h?`${h} h${m?' '+String(m).padStart(2,'0'):''}`:`${m} min`; }
+
+showEvPopup=function(evt, encodedData){
+  evt?.stopPropagation?.();
+  const data=JSON.parse(decodeURIComponent(encodedData));
+  _currentNoteKey=makeNoteKey(data.title,data.start||'');
+  _currentTaskKey=makeTaskKey(data.title,data.start||'');
+  const debut=new Date(data.start), fin=new Date(data.end), now=new Date();
+  const ev={title:data.title, desc:data.desc||'', location:data.loc||'', start:debut, end:fin};
+  const exam=isExamEvent(ev), ne=contientNE(data.title)||contientNE(data.desc||'');
+  const type=detectCourseType(data.title, data.loc||'');
+  const salle=salleCourte(data.loc);
+  // Code module (R303, SAE304…) en étiquette, le reste en titre
+  const m=(data.title||'').match(/^((?:R|SAE|S|M)\d{2,4}[A-Z]?\w*)\s+(.+)$/i);
+  // Le type (TD, CM…) et le NE final sont déjà en étiquettes : pas en double dans le titre
+  const code=m?m[1]:'', titre=(m?m[2]:data.title||'Sans titre')
+    .replace(/\s*[-–_]?\s*NE\s*$/i,'').replace(/\s+(CM|TD|TP)\s*$/i,'').trim() || data.title;
+  const minutes=Math.round((fin-debut)/60000);
+  let rel='';
+  if(debut<=now && now<fin) rel=`<span class="fc-rel encours">en cours · fin dans ${dureeTexte(Math.round((fin-now)/60000))}</span>`;
+  else if(debut>now && debut-now<12*3600000) rel=`<span class="fc-rel">dans ${dureeTexte(Math.round((debut-now)/60000))}</span>`;
+  const quand=`${JOURS_LONGS[debut.getDay()]} ${debut.getDate()} ${MOIS_C[debut.getMonth()]} · ${fmtTime(debut)} → ${fmtTime(fin)} · ${dureeTexte(minutes)}`;
+  const detail=(data.desc||'').split('\n').map(s=>s.trim()).filter(s=>s && !/^\(Export|^\(Exporté/i.test(s)).slice(0,4).join('\n');
+  const enc=encoderPourAttribut({title:data.title, start:data.start, end:data.end, location:data.loc||'', desc:data.desc||''});
+  const epingle=exam && isPinnedExam(ev);
+  const html=`<article class="fc" style="--evh:${subjectHue(data.title)}">
+    <div class="fc-haut">
+      <div class="fc-tags">
+        ${['CM','TD','TP','SAE'].includes(type)?`<span class="fc-tag type">${type}</span>`:''}
+        ${code?`<span class="fc-tag">${escapeHtml(code)}</span>`:''}
+        ${exam?'<span class="fc-tag exam">EXAMEN</span>':''}
+        ${ne?'<span class="fc-tag ne">NE · non encadré</span>':''}
+      </div>
+      <button class="fc-fermer" onclick="flFermer()" aria-label="Fermer"><svg class="px" data-px="close" aria-hidden="true"></svg></button>
+    </div>
+    <h2 class="fc-titre">${escapeHtml(titre)}</h2>
+    <div class="fc-quand">${quand}${rel}</div>
+    <div class="fc-lignes">
+      ${salle?`<div class="fc-ligne"><svg class="px" data-px="loc" aria-hidden="true"></svg><span class="fc-ligne-val salle">${escapeHtml(salle)}</span>
+        ${data.loc && data.loc!==salle?`<span class="fc-ligne-val detail" style="flex:0 1 auto;text-align:right">${escapeHtml(data.loc)}</span>`:''}</div>`:''}
+      ${data.prof?`<div class="fc-ligne"><svg class="px" data-px="person" aria-hidden="true"></svg><span class="fc-ligne-val">${escapeHtml(data.prof)}</span></div>`:''}
+      ${detail?`<div class="fc-ligne"><svg class="px" data-px="clip" aria-hidden="true"></svg><span class="fc-ligne-val detail">${escapeHtml(detail)}</span></div>`:''}
+      ${exam?`<div class="fc-ligne"><svg class="px" data-px="pin" aria-hidden="true"></svg><span class="fc-ligne-val">${epingle?'Examen épinglé':'Épingler pour le compte à rebours'}</span>
+        <button class="btn-sm fc-action" onclick="togglePinFromModal('${enc}');showEvPopupDepuis('${encodedData}')">${epingle?'Retirer':'Épingler'}</button></div>`:''}
+    </div>
+    <section class="fc-section">
+      <div class="fc-sec-tete"><span class="fc-sec-titre">Tâches</span><span class="fc-sec-compte" id="fc-compte"></span></div>
+      <div id="ev-checklist"></div>
+      <div class="fc-ajout">
+        <input type="text" id="ev-add-input" placeholder="Ajouter une tâche" maxlength="120" enterkeyhint="done" autocomplete="off">
+        <button class="btn-main" onclick="evAddTask()" aria-label="Ajouter la tâche">+</button>
+      </div>
+    </section>
+    <section class="fc-section">
+      <div class="fc-sec-tete"><span class="fc-sec-titre">Note</span></div>
+      <textarea class="fc-note" id="ev-note-textarea" placeholder="Une remarque sur ce cours…">${escapeHtml(localStorage.getItem(_currentNoteKey)||'')}</textarea>
+      <div class="fc-note-etat" id="fc-note-etat"></div>
+    </section>
+  </article>`;
+  const b=evt?.currentTarget?.getBoundingClientRect?.() || evt?.target?.getBoundingClientRect?.();
+  let noteTouchee=false;
+  const el=flOuvrir(html,{label:titre, x:evt?.clientX ?? (b?b.right:innerWidth/2), y:evt?.clientY ?? (b?b.top:120),
+    onClose:()=>{ if(noteTouchee && document.getElementById('cal-body')?.style.display==='block') renderCalendar(); }});
+  renderEvChecklist(evGetTasks());
+  // Note : enregistrement automatique, pas de bouton
+  const ta=el.querySelector('#ev-note-textarea'), etat=el.querySelector('#fc-note-etat');
+  let minuterie=null;
+  ta.addEventListener('input',()=>{
+    noteTouchee=true; etat.textContent='…';
+    clearTimeout(minuterie);
+    minuterie=setTimeout(()=>{
+      const v=ta.value.trim();
+      if(v) localStorage.setItem(_currentNoteKey,v); else localStorage.removeItem(_currentNoteKey);
+      etat.textContent=v?'Enregistrée':'Note vide';
+      if(typeof updateNotesPanel==='function') updateNotesPanel();
+    },400);
+  });
+  el.querySelector('#ev-add-input').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); evAddTask(); } });
+  requestAnimationFrame(()=>{ if(_fl?.mobile) flMesurer(); else flRecaler(); });
+};
+// Rouvrir la fiche (après épinglage) au même endroit
+function showEvPopupDepuis(enc){ showEvPopup(null, enc); }
+
+// Liste des tâches au format fiche (les fonctions evAdd/Toggle/Delete l'appellent)
+renderEvChecklist=function(tasks){
+  const el=document.getElementById('ev-checklist');
+  if(!el) return;
+  const c=document.getElementById('fc-compte');
+  if(c) c.textContent=tasks.length?`${tasks.filter(t=>t.done).length}/${tasks.length}`:'';
+  if(!tasks.length){ el.innerHTML='<div class="fc-vide">Rien à faire pour ce cours.</div>'; return; }
+  el.innerHTML=tasks.map((t,i)=>`
+    <div class="fc-tache${t.done?' fait':''}">
+      <input type="checkbox" id="evc-${i}" ${t.done?'checked':''} onchange="evToggleTask(${i})">
+      <label for="evc-${i}">${escapeHtml(t.text)}</label>
+      <button class="fc-tache-suppr" onclick="evDeleteTask(${i})" aria-label="Supprimer la tâche"><svg class="px" data-px="trash" aria-hidden="true"></svg></button>
+    </div>`).join('');
+};
+// L'ancienne popup flottante n'existe plus
+closePopupOnce=function(){ flFermer(); };
+
+/* Les autres fenêtres (examens, créneaux, stats, notes de semaine…)
+   deviennent des feuilles en CSS sur téléphone ; on leur ajoute le
+   glisser vers le bas pour fermer, depuis la poignée en haut. */
+(function glisserFenetres(){
+  const BOITES='.modal-overlay .modal,.modal-overlay .modal-box,.exam-modal,.free-overlay>*,.stats-overlay>*,.week-note-overlay>*,.annonce-overlay>*';
+  let boite=null, y0=0, dy=0, t0=0;
+  document.addEventListener('touchstart',e=>{
+    if(!FL_MOBILE.matches) return;
+    const b=e.target.closest(BOITES);
+    if(!b || e.target.closest('input,textarea,select')) return;
+    const haut=e.touches[0].clientY-b.getBoundingClientRect().top;
+    if(haut>56 && b.scrollTop>0) return;        // geste de défilement, pas de fermeture
+    if(haut>56 && b.scrollHeight>b.clientHeight) return;
+    boite=b; y0=e.touches[0].clientY; dy=0; t0=performance.now();
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!boite) return;
+    dy=Math.max(0,e.touches[0].clientY-y0);
+    if(dy>4){ e.preventDefault(); boite.style.transition='none'; boite.style.transform=`translateY(${dy}px)`; }
+  },{passive:false});
+  document.addEventListener('touchend',()=>{
+    if(!boite) return;
+    const b=boite; boite=null;
+    const v=dy/Math.max(1,performance.now()-t0);
+    b.style.transition=`transform .35s ${FL_COURBE}`;
+    if(dy>b.offsetHeight*.25 || (v>.4 && dy>30)){
+      b.style.transform=`translateY(${b.offsetHeight}px)`;
+      setTimeout(()=>{ b.parentElement.dispatchEvent(new MouseEvent('click',{bubbles:true})); b.style.transform=''; b.style.transition=''; },300);
+    } else b.style.transform='';
+  });
+})();
 
 /* ============================================================
    INSTALLER L'APPLI
