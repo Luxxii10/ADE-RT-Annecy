@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Test du Worker</title>
+<style>
+  :root{color-scheme:dark}
+  body{margin:0;padding:16px;background:#101113;color:#e8e8ea;font:14px/1.5 ui-monospace,Consolas,monospace}
+  h1{font:600 18px system-ui,sans-serif;margin:0 0 4px}
+  p{font:13px/1.5 system-ui,sans-serif;color:#9aa0a6;margin:0 0 14px;max-width:70ch}
+  button{font:600 14px system-ui,sans-serif;padding:10px 16px;border-radius:8px;border:0;background:#3b82f6;color:#fff;cursor:pointer;margin:0 8px 12px 0}
+  button:disabled{opacity:.5}
+  pre{white-space:pre-wrap;word-break:break-word;background:#17191c;border:1px solid #2a2d31;border-radius:8px;padding:12px;margin:0}
+  .ok{color:#5fd38d}.ko{color:#ff6b6b}.info{color:#9aa0a6}
+</style>
+</head>
+<body>
+<h1>Test du Worker proxy</h1>
+<p>Lance les requêtes que l'appli fait au Worker et affiche ce qui revient.
+À ouvrir depuis le site GitHub Pages (le Worker n'accepte que cette origine).
+Rien n'est envoyé ailleurs. Copie le résultat et colle-le dans la conversation.
+Tu peux supprimer ce fichier du dépôt après.</p>
+<button id="go">Lancer les tests</button><button id="copier" disabled>Copier les résultats</button>
+<pre id="out">En attente…</pre>
+
+<script>
+const out=document.getElementById('out');
+let texte='';
+const log=(s,c)=>{ texte+=s+'\n'; const sp=document.createElement('span'); if(c) sp.className=c; sp.textContent=s+'\n'; out.appendChild(sp); };
+const ms=t0=>Math.round(performance.now()-t0)+' ms';
+const nbEv=t=>(String(t||'').match(/BEGIN:VEVENT/g)||[]).length;
+const verdict=(ok,lib)=>log((ok?'✔ ':'✘ ')+lib, ok?'ok':'ko');
+
+async function config(){
+  // Lit les vraies valeurs dans index.html, pour tester exactement ce que fait l'appli
+  const src=await (await fetch('./index.html',{cache:'no-store'})).text();
+  const pick=re=>(src.match(re)||[])[1];
+  const GROUPS=new Function('return '+pick(/const GROUPS = (\{[\s\S]*?\n\});/))();
+  return {
+    CF_WORKER:pick(/const CF_WORKER = '([^']+)'/),
+    ICAL_BASE:pick(/const ICAL_BASE = "([^"]+)"/),
+    ICAL_DATA:pick(/const ICAL_DATA = "([^"]+)"/),
+    PROJECT_ID:pick(/const PROJECT_ID = (\d+)/),
+    GROUPS,
+    dispoPage:/dispo\?ids=/.test(src),
+  };
+}
+
+async function essai(lib, url, opts){
+  const t0=performance.now();
+  try{
+    const r=await fetch(url, opts);
+    const corps=await r.text();
+    return {ok:true, status:r.status, temps:ms(t0), corps, h:{
+      cors:r.headers.get('access-control-allow-origin'), cc:r.headers.get('cache-control'), type:r.headers.get('content-type')}};
+  }catch(e){ return {ok:false, temps:ms(t0), err:e.message||String(e)}; }
+}
+
+document.getElementById('go').onclick=async()=>{
+  const btn=document.getElementById('go'); btn.disabled=true; out.textContent=''; texte='';
+  log('Test Worker — '+new Date().toLocaleString('fr-FR')+' — '+location.origin, 'info');
+  log('Navigateur : '+navigator.userAgent, 'info');
+  let C;
+  try{ C=await config(); }catch(e){ log('Impossible de lire index.html : '+e.message,'ko'); btn.disabled=false; return; }
+  log(`Worker : ${C.CF_WORKER}   projet ADE : ${C.PROJECT_ID}`, 'info');
+  verdict(C.dispoPage, 'index.html en ligne utilise /dispo (nouvelle page déployée)');
+  const W=C.CF_WORKER.replace(/\/?$/,'/');
+  const ids=[...C.GROUPS.salles,...C.GROUPS.profs,...['rt1','rt2','rt3','alt'].flatMap(k=>C.GROUPS[k]||[])].map(x=>x.id);
+  const date=new Intl.DateTimeFormat('fr-CA',{timeZone:'Europe/Paris'}).format(new Date());
+  log(`${ids.length} ressources, date ${date}`, 'info');
+
+  // 1. Ancien mode : un flux (comme l'EDT affiché)
+  log('\n— 1. GET /?url= (un groupe, année entière)');
+  const g=C.GROUPS.rt1?.[0]?.id||ids[0];
+  const yr=(()=>{const n=new Date(); return (n.getMonth()>=7?n.getFullYear():n.getFullYear()-1)+'-08-01';})();
+  const u1=`${C.ICAL_BASE}?data=${C.ICAL_DATA}&resources=${g}&projectId=${C.PROJECT_ID}&calType=ical&firstDate=${yr}&lastDate=2042-08-14`;
+  const r1=await essai('url', W+'?url='+encodeURIComponent(u1));
+  if(!r1.ok) log('Erreur réseau/CORS : '+r1.err+' ('+r1.temps+')','ko');
+  else{
+    log(`HTTP ${r1.status} en ${r1.temps}, ${r1.corps.length} octets, ${nbEv(r1.corps)} cours, CORS=${r1.h.cors}`);
+    verdict(r1.status===200 && nbEv(r1.corps)>0, 'le flux revient avec des cours');
+  }
+
+  // 2. Sécurité : hôte refusé
+  log('\n— 2. GET /?url= vers un autre site (doit être refusé)');
+  const r2=await essai('evil', W+'?url='+encodeURIComponent('https://example.com/'));
+  // Le 403 du Worker n'a pas d'en-tête CORS : le navigateur ne peut pas en
+  // lire le statut et signale une erreur réseau. C'est le comportement attendu,
+  // si le test 1 a réussi (sinon, le Worker est peut-être simplement injoignable).
+  if(r2.ok) verdict(r2.status===403, `HTTP ${r2.status} (attendu 403)`);
+  else verdict(r1.ok, `refusé : réponse illisible pour la page (${r2.err}), attendu`);
+
+  // 3. /dispo, premier appel
+  log('\n— 3. GET /dispo (toutes les ressources, journée)');
+  const u3=`${W}dispo?ids=${ids.join(',')}&date=${date}&data=${C.ICAL_DATA}&projectId=${C.PROJECT_ID}`;
+  const r3=await essai('dispo', u3, {cache:'no-store'});
+  let j3=null;
+  if(!r3.ok) log('Erreur réseau/CORS : '+r3.err+' ('+r3.temps+')','ko');
+  else{
+    log(`HTTP ${r3.status} en ${r3.temps}, ${r3.corps.length} octets, Cache-Control=${r3.h.cc}, CORS=${r3.h.cors}`);
+    try{ j3=JSON.parse(r3.corps); }catch(e){ log('Réponse non JSON : '+r3.corps.slice(0,200),'ko'); }
+    if(j3?.erreur) log('Erreur du Worker : '+j3.erreur,'ko');
+    if(j3?.cal){
+      const cles=Object.keys(j3.cal), nuls=cles.filter(k=>j3.cal[k]===null), vides=cles.filter(k=>j3.cal[k]&&!nbEv(j3.cal[k]));
+      const total=cles.reduce((s,k)=>s+nbEv(j3.cal[k]),0);
+      verdict(cles.length===ids.length, `${cles.length}/${ids.length} ressources dans la réponse`);
+      verdict(nuls.length===0, `${nuls.length} ressource(s) sans réponse d'ADE${nuls.length?' : '+nuls.join(','):''}`);
+      log(`${total} cours aujourd'hui au total, ${vides.length} ressource(s) sans cours aujourd'hui`);
+      const nom=id=>[...Object.values(C.GROUPS).flat()].find(x=>String(x.id)===String(id))?.nom||id;
+      cles.filter(k=>nbEv(j3.cal[k])).slice(0,6).forEach(k=>log(`   ${nom(k)} : ${nbEv(j3.cal[k])} cours`));
+    }
+  }
+
+  // 4. /dispo, deuxième appel (mémoire du Worker)
+  log('\n— 4. GET /dispo une deuxième fois (devrait être plus rapide)');
+  const r4=await essai('dispo2', u3, {cache:'no-store'});
+  if(r4.ok){ log(`HTTP ${r4.status} en ${r4.temps} (1er appel : ${r3.temps})`); verdict(r4.corps===r3.corps, 'même contenu que le 1er appel'); }
+  else log('Erreur : '+r4.err,'ko');
+
+  // 5. Paramètres invalides
+  log('\n— 5. GET /dispo avec des paramètres invalides (doit répondre 400)');
+  const r5=await essai('bad', `${W}dispo?ids=1,2&date=hier&data=x&projectId=1`);
+  if(r5.ok) verdict(r5.status===400, `HTTP ${r5.status} (attendu 400) — ${r5.corps.slice(0,80)}`); else log('Erreur : '+r5.err,'ko');
+
+  // 6. Comparaison avec l'ancienne méthode (34 appels), sur 3 ressources seulement
+  log('\n— 6. Ancienne méthode, 3 ressources une par une (pour comparer le temps)');
+  const t0=performance.now(); let n=0;
+  for(const id of ids.slice(0,3)){
+    const u=`${C.ICAL_BASE}?data=${C.ICAL_DATA}&resources=${id}&projectId=${C.PROJECT_ID}&calType=ical&firstDate=${date}&lastDate=${date}`;
+    const r=await essai('un', W+'?url='+encodeURIComponent(u)); if(r.ok&&r.status===200) n++;
+  }
+  log(`${n}/3 réussis en ${ms(t0)}` + (n===3 ? ` — extrapolé à ${ids.length} : ~${Math.round((performance.now()-t0)/3*ids.length/1000)} s, contre ${r3.temps||'?'} pour /dispo` : ''));
+
+  log('\nFin des tests.', 'info');
+  btn.disabled=false; document.getElementById('copier').disabled=false;
+};
+document.getElementById('copier').onclick=async()=>{
+  try{ await navigator.clipboard.writeText(texte); document.getElementById('copier').textContent='Copié ✔'; }
+  catch(e){ const r=document.createRange(); r.selectNodeContents(out); getSelection().removeAllRanges(); getSelection().addRange(r); alert('Sélectionné : fais Ctrl+C'); }
+};
+</script>
+</body>
+</html>
