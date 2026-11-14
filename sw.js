@@ -12,7 +12,7 @@
 
    Changer VERSION à chaque mise en ligne d'un sw.js modifié.
    ============================================================ */
-const VERSION = 'ade-rt-v4';
+const VERSION = 'ade-rt-v5';
 const CACHE_APPLI = VERSION + '-appli';
 const CACHE_POLICES = VERSION + '-polices';
 
@@ -22,6 +22,11 @@ const FICHIERS = [
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/icon-maskable-192.png',
+  './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png',
+  './icons/favicon-32.png',
+  './icons/favicon-16.png',
 ];
 
 // Jamais en cache : données vivantes, et URL horodatées qui rempliraient le cache

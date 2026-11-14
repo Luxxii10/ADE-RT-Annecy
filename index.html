@@ -7,11 +7,12 @@
 <!-- PWA : installable et utilisable hors ligne (voir sw.js et README.md) -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#101113">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="EDT RT">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23096cb5'/%3E%3Crect x='10' y='18' width='44' height='36' rx='5' fill='white' opacity='.95'/%3E%3Crect x='10' y='18' width='44' height='12' rx='5' fill='%23096cb5'/%3E%3Crect x='10' y='24' width='44' height='6' fill='%23096cb5'/%3E%3Ccircle cx='22' cy='15' r='3.5' fill='%23a0c4f8'/%3E%3Ccircle cx='42' cy='15' r='3.5' fill='%23a0c4f8'/%3E%3Crect x='17' y='37' width='8' height='6' rx='2' fill='%23096cb5' opacity='.25'/%3E%3Crect x='28' y='37' width='8' height='6' rx='2' fill='%23096cb5' opacity='.55'/%3E%3Crect x='39' y='37' width='8' height='6' rx='2' fill='%23096cb5' opacity='.25'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -2918,6 +2919,28 @@ header.topbar .toggle-wrap{position:static;}
 /* Sur téléphone, le badge prend la place de celui du labo (sans réseau, il est figé) */
 @media(max-width:420px){ .hl-etat:not([hidden]) ~ .tb-horloge{display:none;} }
 .pal-meta.hl{color:var(--ok);}
+/* Bouton « Garder hors ligne » (en-tête de l'EDT) */
+.hl-garder{
+  display:inline-flex;align-items:center;gap:6px;height:33px;padding:0 10px;border-radius:6px;
+  border:1px solid var(--border);background:transparent;color:var(--text2);
+  font:500 12px var(--f-ui);cursor:pointer;white-space:nowrap;
+}
+.hl-garder:hover{border-color:var(--line);color:var(--text);}
+.hl-garder[aria-pressed="true"]{
+  border-color:color-mix(in srgb,var(--ok) 55%,transparent);
+  background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--text);
+}
+.hl-garder[aria-pressed="true"] .px{color:var(--ok);}
+.hl-garder:disabled{opacity:.5;cursor:default;}
+@media(max-width:700px){ .hl-garder-txt{display:none;} .hl-garder{padding:0 9px;height:36px;} }
+/* Liste dans les paramètres */
+.hl-aide{margin:2px 0 8px;line-height:1.45;}
+.hl-liste{display:flex;flex-direction:column;}
+.hl-ligne{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
+.hl-ligne-nom{flex:1;min-width:0;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hl-ligne-meta{font:400 11px var(--f-mono);color:var(--muted);white-space:nowrap;}
+.hl-ligne-meta.garde{color:var(--ok);}
+.hl-vide{font-size:12.5px;color:var(--muted);padding:6px 0;}
 
 /* ── Installation de l'appli ── */
 .tb-installer{
@@ -3620,6 +3643,11 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
         <!-- Right side: actions -->
         <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;flex-wrap:nowrap;">
           <div class="cal-header-actions">
+            <button class="hl-garder" id="btn-hors-ligne" onclick="basculerHorsLigne()" aria-pressed="false"
+                    title="Garder cet emploi du temps sur l'appareil, pour le consulter sans réseau">
+              <svg class="px" data-px="save" aria-hidden="true" focusable="false"></svg>
+              <span class="hl-garder-txt">Garder hors ligne</span>
+            </button>
             <span class="freshness-badge" id="freshness-badge" style="display:none"><span class="freshness-dot" id="freshness-dot"></span><span id="freshness-text">—</span></span>
             <!-- ⋯ overflow menu -->
             <div class="cal-overflow-wrap" id="cal-overflow-wrap">
@@ -3694,6 +3722,15 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
         </div>
         <button class="btn-sm" onclick="closeCustom();ouvrirProfil()">Ouvrir</button>
       </div>
+    </div>
+
+    <div class="custom-section params-section-card">
+      <div class="params-section-title">Hors ligne</div>
+      <div class="custom-row-sub hl-aide">
+        Les 5 derniers emplois du temps chargés sont gardés automatiquement.
+        Ceux que tu gardes avec <b>Garder hors ligne</b> restent jusqu'à ce que tu les retires.
+      </div>
+      <div class="hl-liste" id="hl-liste"></div>
     </div>
 
     <div class="custom-section params-section-card">
@@ -4249,27 +4286,9 @@ function closeCustom(){ document.getElementById('custom-overlay').classList.remo
    FAVICON DYNAMIQUE — change selon thème
    ============================================================ */
 function updateFavicon(){
-  const root = document.documentElement;
-  // Lire la couleur d'accent actuelle (style inline prioritaire, sinon CSS var)
-  const acc = root.style.getPropertyValue('--acc') || getComputedStyle(root).getPropertyValue('--acc').trim() || '#096cb5';
-  const isDark = root.getAttribute('data-theme') === 'dark';
-  const bg  = isDark ? '#1a163a' : '#ffffff';
-  const fg  = acc.trim();
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
-    <rect width='64' height='64' rx='14' fill='${fg}'/>
-    <rect x='10' y='18' width='44' height='36' rx='5' fill='${bg}' opacity='.95'/>
-    <rect x='10' y='18' width='44' height='12' rx='5' fill='${fg}'/>
-    <rect x='10' y='24' width='44' height='6' fill='${fg}'/>
-    <circle cx='22' cy='15' r='3.5' fill='${bg}' opacity='.7'/>
-    <circle cx='42' cy='15' r='3.5' fill='${bg}' opacity='.7'/>
-    <rect x='17' y='37' width='8' height='6' rx='2' fill='${fg}' opacity='.25'/>
-    <rect x='28' y='37' width='8' height='6' rx='2' fill='${fg}' opacity='.55'/>
-    <rect x='39' y='37' width='8' height='6' rx='2' fill='${fg}' opacity='.25'/>
-  </svg>`;
-  const encoded = 'data:image/svg+xml,' + encodeURIComponent(svg);
-  let link = document.querySelector("link[rel='icon']");
-  if(!link){ link = document.createElement('link'); link.rel='icon'; link.type='image/svg+xml'; document.head.appendChild(link); }
-  link.href = encoded;
+  // Le favicon est maintenant l'icône pixel art du labo (icons/favicon-*.png,
+  // déclarés dans <head>). On ne le régénère plus selon le thème : l'icône
+  // reste la même dans l'onglet, sur l'écran d'accueil et dans le manifeste.
 }
 
 // Init
@@ -9469,6 +9488,7 @@ function palActions(){
     edt && {lib:'Stats du semestre', faire:()=>openStatsModal()},
     edt && {lib:'Imprimer la semaine', faire:()=>printCalendar()},
     edt && {lib:'Copier le lien de cette vue', faire:()=>partagerVue()},
+    edt && {lib:hlEstGarde([...selected])?'Ne plus garder cet EDT hors ligne':'Garder cet EDT hors ligne', faire:()=>basculerHorsLigne()},
     {lib:sombre?'Passer en thème clair':'Passer en thème sombre', faire:()=>basculerThemeAnime(!sombre)},
     {lib:'Paramètres', faire:()=>openParams()},
     peutInstaller() && {lib:'Installer l\'appli', faire:()=>installerAppli()},
@@ -9743,23 +9763,35 @@ const hlUrl=cle=>new URL('__hors-ligne/'+encodeURIComponent(cle)+'.json', locati
 const hlIndex=()=>{ try{ return JSON.parse(localStorage.getItem(HL_INDEX)||'[]'); }catch(e){ return []; } };
 const hlCacheOk=()=>'caches' in window && window.isSecureContext;
 
-async function hlEcrire(ids, donnees){
+/* Deux sortes de copies dans le même cache :
+   - « récents » : les 5 derniers EDT chargés, renouvelés automatiquement ;
+   - « gardés »  : ceux que l'utilisateur a choisi de garder (bouton dans
+     l'en-tête de l'EDT). Jamais évincés par les récents, 15 au maximum.
+   Une copie gardée est rafraîchie à chaque chargement réussi. */
+const HL_MAX_GARDES=15;
+async function hlSupprimerCopie(cle){
+  try{ if(hlCacheOk()) await (await caches.open(HL_CACHE)).delete(hlUrl(cle)); else localStorage.removeItem('ade-hl-'+cle); }catch(e){}
+}
+async function hlEcrire(ids, donnees, opts={}){
   const cle=hlCle(ids);
-  const paquet={cle, ids:ids.map(Number), date:Date.now(), donnees};
+  const ancien=hlIndex().find(x=>x.cle===cle);
+  const garde=opts.garde ?? !!ancien?.garde;
+  const paquet={cle, ids:ids.map(Number), date:opts.date || Date.now(), donnees};
   try{
     if(hlCacheOk()){
       const c=await caches.open(HL_CACHE);
       await c.put(hlUrl(cle), new Response(JSON.stringify(paquet),{headers:{'Content-Type':'application/json'}}));
     } else localStorage.setItem('ade-hl-'+cle, JSON.stringify(paquet));
-  }catch(e){ console.warn('Copie hors ligne impossible',e); return; }
-  // Index LRU : la plus récente en tête, 5 au maximum
-  const idx=[{cle, ids:paquet.ids, date:paquet.date, nom:ids.map(labelForId).join(' + ')},
-             ...hlIndex().filter(x=>x.cle!==cle)];
-  const garder=idx.slice(0,HL_MAX), jeter=idx.slice(HL_MAX);
-  localStorage.setItem(HL_INDEX, JSON.stringify(garder));
-  for(const x of jeter){
-    try{ if(hlCacheOk()) (await caches.open(HL_CACHE)).delete(hlUrl(x.cle)); else localStorage.removeItem('ade-hl-'+x.cle); }catch(e){}
-  }
+  }catch(e){ console.warn('Copie hors ligne impossible',e); return false; }
+  const entree={cle, ids:paquet.ids, date:paquet.date, nom:ids.map(labelForId).join(' + '), garde};
+  const idx=[entree, ...hlIndex().filter(x=>x.cle!==cle)];
+  // Les récents tournent (5 max) ; les gardés ne sortent que si on les retire
+  const gardes=idx.filter(x=>x.garde), recents=idx.filter(x=>!x.garde);
+  const jeter=recents.slice(HL_MAX);
+  localStorage.setItem(HL_INDEX, JSON.stringify([...gardes, ...recents.slice(0,HL_MAX)]));
+  for(const x of jeter) await hlSupprimerCopie(x.cle);
+  majBoutonHorsLigne();
+  return true;
 }
 async function hlLire(ids){
   const cle=hlCle(ids);
@@ -9875,6 +9907,104 @@ async function rafraichirEnFond(ids){
   renderCalendar(); updateNextCourseCard();
 }
 hlMajEtat();
+
+/* ============================================================
+   GARDER UN EDT HORS LIGNE (choix de l'utilisateur)
+   Bouton « Garder hors ligne » dans l'en-tête de l'EDT, action Ctrl+K,
+   et liste dans Paramètres → Hors ligne pour ouvrir ou retirer.
+   ============================================================ */
+const hlSerialiser=ids=>Object.fromEntries(ids.map(id=>[id,
+  (allEventsById[id]||[]).map(e=>({...e,start:e.start.toISOString(),end:e.end.toISOString()}))]));
+const hlEstGarde=ids=>!!hlIndex().find(x=>x.cle===hlCle(ids))?.garde;
+
+async function hlNettoyerRecents(){
+  const idx=hlIndex(), gardes=idx.filter(x=>x.garde), recents=idx.filter(x=>!x.garde);
+  localStorage.setItem(HL_INDEX, JSON.stringify([...gardes, ...recents.slice(0,HL_MAX)]));
+  for(const x of recents.slice(HL_MAX)) await hlSupprimerCopie(x.cle);
+}
+
+async function basculerHorsLigne(idsForces){
+  const ids=idsForces || [...selected];
+  if(!ids.length) return;
+  const cle=hlCle(ids);
+  if(hlEstGarde(ids)){
+    // Ne plus garder : la copie redevient un « récent » et peut tourner
+    localStorage.setItem(HL_INDEX, JSON.stringify(hlIndex().map(x=>x.cle===cle?{...x,garde:false}:x)));
+    await hlNettoyerRecents();
+    majBoutonHorsLigne(); rendreListeHorsLigne();
+    showToast('Cet EDT n\'est plus gardé hors ligne');
+    return;
+  }
+  if(hlIndex().filter(x=>x.garde).length>=HL_MAX_GARDES){
+    showToast(`${HL_MAX_GARDES} EDT gardés au maximum : retires-en un dans Paramètres → Hors ligne`);
+    return;
+  }
+  // Les données affichées si elles correspondent, sinon la copie déjà enregistrée
+  let donnees=null, date=null;
+  const affiche=hlCle([...selected])===cle && ids.every(id=>allEventsById[id]?.length!==undefined);
+  if(affiche){ donnees=hlSerialiser(ids); date=_hlDate || (typeof _lastFetchTime!=='undefined' && _lastFetchTime) || null; }
+  else { const p=await hlLire(ids); if(p){ donnees=p.donnees; date=p.date; } }
+  if(!donnees || !Object.values(donnees).some(l=>l.length)){
+    showToast('Charge cet EDT une fois avec du réseau pour pouvoir le garder');
+    return;
+  }
+  const btn=document.getElementById('btn-hors-ligne');
+  if(btn) btn.disabled=true;
+  const ok=await hlEcrire(ids, donnees, {garde:true, date});
+  if(btn) btn.disabled=false;
+  rendreListeHorsLigne();
+  showToast(ok ? 'Gardé hors ligne : consultable sans réseau' : 'Impossible d\'enregistrer sur cet appareil');
+}
+
+function majBoutonHorsLigne(){
+  const btn=document.getElementById('btn-hors-ligne');
+  if(!btn) return;
+  const ids=[...selected], garde=ids.length && hlEstGarde(ids);
+  btn.hidden=!ids.length;
+  btn.setAttribute('aria-pressed', garde?'true':'false');
+  btn.querySelector('.hl-garder-txt').textContent = garde ? 'Gardé hors ligne' : 'Garder hors ligne';
+  btn.title = garde ? 'Gardé sur l\'appareil · cliquer pour ne plus le garder'
+                    : 'Garder cet emploi du temps sur l\'appareil, pour le consulter sans réseau';
+}
+
+function rendreListeHorsLigne(){
+  const boite=document.getElementById('hl-liste');
+  if(!boite) return;
+  const idx=hlIndex();
+  if(!idx.length){ boite.innerHTML='<div class="hl-vide">Aucun emploi du temps enregistré pour l\'instant.</div>'; return; }
+  const quand=t=>{ const d=new Date(t); return `${d.getDate()}/${d.getMonth()+1} ${fmtTime(d)}`; };
+  boite.innerHTML=idx.map(x=>`
+    <div class="hl-ligne">
+      <span class="hl-ligne-nom" title="${x.nom}">${x.nom}</span>
+      <span class="hl-ligne-meta${x.garde?' garde':''}">${x.garde?'gardé':'récent'} · ${quand(x.date)}</span>
+      <button class="btn-sm" onclick="hlOuvrir('${x.cle}')">Ouvrir</button>
+      <button class="btn-sm" onclick="${x.garde?`hlRetirer('${x.cle}')`:`basculerHorsLigne(hlIdsDe('${x.cle}'))`}">${x.garde?'Retirer':'Garder'}</button>
+    </div>`).join('');
+}
+const hlIdsDe=cle=>hlIndex().find(x=>x.cle===cle)?.ids || [];
+async function hlOuvrir(cle){
+  const ids=hlIdsDe(cle); if(!ids.length) return;
+  if(typeof closeCustom==='function') closeCustom();
+  applySelection(ids);
+  await voirEmploiDuTemps();
+}
+async function hlRetirer(cle){
+  localStorage.setItem(HL_INDEX, JSON.stringify(hlIndex().filter(x=>x.cle!==cle)));
+  await hlSupprimerCopie(cle);
+  majBoutonHorsLigne(); rendreListeHorsLigne();
+  showToast('Retiré de l\'appareil');
+}
+
+// La liste se met à jour à l'ouverture des paramètres, le bouton à chaque rendu
+if(typeof openParams==='function'){
+  const ouvrir=openParams;
+  openParams=function(...a){ const r=ouvrir.apply(this,a); rendreListeHorsLigne(); return r; };
+}
+if(typeof renderCalendar==='function'){
+  const rendu2=renderCalendar;
+  renderCalendar=function(...a){ const r=rendu2.apply(this,a); majBoutonHorsLigne(); return r; };
+}
+majBoutonHorsLigne();
 
 /* ============================================================
    INSTALLER L'APPLI
