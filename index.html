@@ -3059,6 +3059,21 @@ header.topbar .toggle-wrap{position:static;}
   box-shadow:0 8px 30px rgba(0,0,0,.35);font:500 13.5px var(--f-ui);animation:bmMonte .3s cubic-bezier(.32,.72,0,1);}
 .ta-toast button{height:36px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:#8ab4ff;font:600 13.5px var(--f-ui);cursor:pointer;}
 @media(max-width:700px){ .ta-toast{bottom:calc(80px + env(safe-area-inset-bottom));} .ta-texte{font-size:15.5px;} }
+.sy-ligne-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.sy-saisie-zone{display:flex;gap:8px;margin-top:10px;}
+.sy-saisie-zone[hidden]{display:none;}
+.sy-saisie-zone input{flex:1;min-width:0;height:42px;padding:0 12px;font:500 16px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;
+  border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text);}
+.sy-statut{font:500 13px var(--f-ui);color:var(--ok,#3fb27f);margin:2px 0 4px;}
+.sy-statut.erreur{color:var(--danger,#e5534b);}
+.sy-vue{max-width:380px;}
+.sy-vue .fc-haut{display:flex;align-items:center;justify-content:space-between;}
+.sy-aide{font:400 14px/1.45 var(--f-ui);color:var(--text2);margin:8px 0 12px;}
+.sy-aide.petite{font-size:12px;color:var(--muted);margin-top:12px;}
+.sy-qr{display:grid;place-items:center;background:#fff;border-radius:12px;padding:10px;width:min(240px,70vw);aspect-ratio:1;margin:0 auto;color:#333;font:13px var(--f-ui);text-align:center;}
+.sy-qr svg{width:100%;height:100%;}
+.sy-code{font:600 19px var(--f-mono);letter-spacing:.08em;text-align:center;margin:14px 0 10px;user-select:all;}
+.sy-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
 .push-ligne{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font:500 14px var(--f-ui);color:var(--text);}
 .push-ligne select{height:36px;font-size:14px;}
 .push-ligne input{width:20px;height:20px;accent-color:var(--acc);}
@@ -4025,6 +4040,15 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
         Ceux que tu gardes avec <b>Garder hors ligne</b> restent jusqu'à ce que tu les retires.
       </div>
       <div class="hl-liste" id="hl-liste"></div>
+    </div>
+
+    <div class="custom-section params-section-card" id="sync-section">
+      <div class="params-section-title">Synchronisation</div>
+      <div class="custom-row-sub hl-aide">
+        Retrouve tes notes, tâches, favoris et réglages sur ton téléphone et ton PC.
+        Tout est chiffré sur l'appareil : le serveur ne peut rien lire. Pas de compte.
+      </div>
+      <div id="sync-contenu"></div>
     </div>
 
     <div class="custom-section params-section-card" id="push-section" hidden>
@@ -10283,7 +10307,7 @@ async function hlRetirer(cle){
 // La liste se met à jour à l'ouverture des paramètres, le bouton à chaque rendu
 if(typeof openParams==='function'){
   const ouvrir=openParams;
-  openParams=function(...a){ const r=ouvrir.apply(this,a); rendreListeHorsLigne(); if(typeof pushRendre==='function') pushRendre(); return r; };
+  openParams=function(...a){ const r=ouvrir.apply(this,a); rendreListeHorsLigne(); if(typeof pushRendre==='function') pushRendre(); if(typeof syRendre==='function') syRendre(); return r; };
 }
 if(typeof renderCalendar==='function'){
   const rendu2=renderCalendar;
@@ -10622,6 +10646,9 @@ function closePopupOnce(){ flFermer(); }
 const TA_CLE='ade-taches';
 function taLire(){ try{ return JSON.parse(localStorage.getItem(TA_CLE)||'[]'); }catch(e){ return []; } }
 function taEcrire(liste){
+  // Synchro : date de modification par tâche, et trace des suppressions,
+  // pour fusionner tâche par tâche avec l'autre appareil
+  if(typeof syNoterTaches==='function') syNoterTaches(taLire(), liste);
   try{ localStorage.setItem(TA_CLE, JSON.stringify(liste)); }catch(e){ showToast('Stockage plein : tâche non enregistrée'); }
   _taIndex=null;
   taMajCompteurs();
@@ -10919,6 +10946,329 @@ function taMajCompteurs(){
   },700));
 })();
 document.addEventListener('DOMContentLoaded',taMajCompteurs);
+
+/* ============================================================
+   SYNCHRONISATION ENTRE APPAREILS (sans compte, sans base de données)
+   - Un code secret, partagé par QR code, relie les appareils d'une
+     même personne. Il ne quitte jamais les appareils.
+   - Du code sont tirés : l'adresse de la « boîte » sur le Worker, un
+     jeton d'écriture et la clé AES-GCM. Le Worker ne garde qu'un bloc
+     chiffré et un numéro de version (voir worker-proxy/worker.js).
+   - Fusion : la modification la plus récente gagne, clé par clé (notes,
+     réglages, favoris) et tâche par tâche ; les suppressions sont
+     mémorisées pour ne pas revenir.
+   - Quand : à l'ouverture, au retour sur l'appli, 3 s après une
+     modification, ou au clic. Jamais en tâche de fond (quota gratuit).
+   ============================================================ */
+const SY_ETAT='ade-sync';            // {code, v, empreinte, date} — propre à l'appareil
+const SY_META='ade-sync-meta';       // {clé: date de dernière modification locale}
+const SY_SUPPR='ade-taches-suppr';   // {id: date} tâches supprimées
+// Réglages d'appareil (mode éco, curseur, robot, onglet…) volontairement exclus
+const SY_CLES=['ade-dark','ade-color','ade-custom-hex','ade-sound','ade-exam-auto',
+               'ade-favorites','ade-fav-default','ade-pinned-exams','ade-subject-hues-v2'];
+const SY_PREFIXES=['ade-evnote-','ade-weeknote-','ade-weektasks-'];
+const syConcerne=k=>SY_CLES.includes(k)||SY_PREFIXES.some(p=>k.startsWith(p));
+let _syApplique=false, _syHorloge=0, _syMinuterie=null, _syEnCours=null;
+// Horloge qui ne recule jamais, même si l'heure de l'appareil est fausse
+function syMaintenant(){ _syHorloge=Math.max(Date.now(), _syHorloge+1); return _syHorloge; }
+const syLireJSON=(k,def)=>{ try{ return JSON.parse(localStorage.getItem(k)||'null')??def; }catch(e){ return def; } };
+function syEtat(){ return syLireJSON(SY_ETAT,null); }
+function syEcrireEtat(e){ _syApplique=true; try{ e?localStorage.setItem(SY_ETAT,JSON.stringify(e)):localStorage.removeItem(SY_ETAT); }finally{ _syApplique=false; } }
+
+// Toute écriture d'une clé synchronisée est datée, sans toucher aux
+// dizaines d'endroits du code qui écrivent dans localStorage.
+(function(){
+  const set=Storage.prototype.setItem, rem=Storage.prototype.removeItem;
+  const noter=k=>{
+    if(_syApplique || !syConcerne(k)) return;
+    const m=syLireJSON(SY_META,{}); m[k]=syMaintenant();
+    set.call(localStorage, SY_META, JSON.stringify(m));
+    syPlanifier();
+  };
+  Storage.prototype.setItem=function(k,v){
+    if(this!==localStorage) return set.call(this,k,v);
+    const avant=this.getItem(k); set.call(this,k,v);
+    if(avant!==String(v)) noter(k);
+  };
+  Storage.prototype.removeItem=function(k){
+    if(this!==localStorage) return rem.call(this,k);
+    const existait=this.getItem(k)!==null; rem.call(this,k);
+    if(existait) noter(k);
+  };
+})();
+
+// Appelée par taEcrire : date chaque tâche modifiée, garde la trace des supprimées
+function syNoterTaches(avant, apres){
+  if(_syApplique) return;
+  const t=syMaintenant(), sansMaj=x=>{ const {maj,...r}=x; return JSON.stringify(r); };
+  const vieux=new Map(avant.map(x=>[x.id, sansMaj(x)]));
+  let change=false;
+  for(const x of apres){ if(vieux.get(x.id)!==sansMaj(x)){ x.maj=t; change=true; } }
+  const ids=new Set(apres.map(x=>x.id)), sup=syLireJSON(SY_SUPPR,{});
+  for(const id of vieux.keys()) if(!ids.has(id)){ sup[id]=t; change=true; }
+  if(change){
+    // Les traces de plus de 120 jours ne servent plus
+    for(const id in sup) if(t-sup[id] > 120*864e5) delete sup[id];
+    _syApplique=true; try{ localStorage.setItem(SY_SUPPR, JSON.stringify(sup)); }finally{ _syApplique=false; }
+    syPlanifier();
+  }
+}
+
+/* Contenu synchronisé : { k:{clé:[valeur|null, date]}, t:{id:tâche}, s:{id:date} } */
+function syCollecter(){
+  const meta=syLireJSON(SY_META,{}), k={};
+  for(let i=0;i<localStorage.length;i++){
+    const cle=localStorage.key(i);
+    if(syConcerne(cle)) k[cle]=[localStorage.getItem(cle), meta[cle]||0];
+  }
+  for(const cle in meta) if(!(cle in k) && syConcerne(cle)) k[cle]=[null, meta[cle]];   // supprimée ici
+  const t={}; taLire().forEach(x=>{ t[x.id]=x; });
+  return { k, t, s:syLireJSON(SY_SUPPR,{}) };
+}
+// Égalité : on gagne seulement si strictement plus récent. À l'appairage
+// (dates à 0 des deux côtés), la boîte l'emporte sur l'appareil qui arrive.
+function syFusion(local, distant){
+  const k={...local.k};
+  for(const [cle,[v,d]] of Object.entries(distant.k||{})){ if(!k[cle] || d>=k[cle][1]) k[cle]=[v,d]; }
+  const s={...local.s};
+  for(const [id,d] of Object.entries(distant.s||{})) s[id]=Math.max(s[id]||0, d);
+  const t={...local.t};
+  for(const [id,x] of Object.entries(distant.t||{})){ if(!t[id] || (x.maj||0)>=(t[id].maj||0)) t[id]=x; }
+  for(const id in t) if(s[id] && s[id]>=(t[id].maj||0)) delete t[id];
+  return {k,t,s};
+}
+function syAppliquer(etat){
+  const meta=syLireJSON(SY_META,{});
+  let notes=0, reglages=false, taches=false;
+  // L'horloge locale rattrape la plus récente reçue : une modif faite juste
+  // après ne peut pas paraître plus ancienne (téléphone en retard de 2 min…)
+  const dates=[...Object.values(etat.k).map(x=>x[1]), ...Object.values(etat.t).map(x=>x.maj||0), ...Object.values(etat.s)];
+  _syHorloge=Math.max(_syHorloge, ...dates, 0);
+  _syApplique=true;
+  try{
+    for(const [cle,[v,d]] of Object.entries(etat.k)){
+      const actuel=localStorage.getItem(cle);
+      if(v===null){ if(actuel!==null){ localStorage.removeItem(cle); notes++; } }
+      else if(actuel!==v){ localStorage.setItem(cle,v); if(SY_CLES.includes(cle)) reglages=true; else notes++; }
+      meta[cle]=d;
+    }
+    localStorage.setItem(SY_META, JSON.stringify(meta));
+    const liste=Object.values(etat.t).sort((a,b)=>(a.cree||'').localeCompare(b.cree||''));
+    if(JSON.stringify(liste)!==JSON.stringify(taLire())){ localStorage.setItem(TA_CLE, JSON.stringify(liste)); taches=true; }
+    localStorage.setItem(SY_SUPPR, JSON.stringify(etat.s));
+  }finally{ _syApplique=false; }
+  // Rafraîchir ce qui est à l'écran
+  if(taches){ _taIndex=null; taMajCompteurs(); const d=document.getElementById('ta-dock'); if(d&&!d.hidden) taRendreListe(d); if(_fl?.el?._afaire) taRendreListe(_fl.el); }
+  if(reglages){
+    renderFavChips();
+    try{ _subjHues=JSON.parse(localStorage.getItem(_SUBJ_HUE_KEY))||_subjHues; }catch(e){}
+    const sombre=localStorage.getItem('ade-dark'); if(sombre!==null) applyTheme(sombre==='1');
+    const coul=localStorage.getItem('ade-color'); if(coul && !localStorage.getItem('ade-custom-hex')) applyColorTheme(coul);
+  }
+  if((taches||notes||reglages) && document.getElementById('cal-body')?.style.display==='block') renderCalendar();
+  return taches||notes||reglages;
+}
+
+/* Clés et chiffrement */
+const syOctets=s=>new TextEncoder().encode(s);
+const syB64u=u8=>{ let s=''; for(const b of u8) s+=String.fromCharCode(b); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
+const syDeB64u=s=>{ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; return Uint8Array.from(atob(s),c=>c.charCodeAt(0)); };
+const SY_ALPHA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // sans 0/O ni 1/I : se recopie sans erreur
+function syNouveauCode(){
+  const o=crypto.getRandomValues(new Uint8Array(20));   // 20 × 5 bits = 100 bits de hasard
+  return [...o].map(b=>SY_ALPHA[b&31]).join('');
+}
+// Tirets, espaces et minuscules acceptés ; tout ce qui n'est pas dans l'alphabet est ignoré
+const syNormaliser=c=>[...(c||'').toUpperCase()].filter(x=>SY_ALPHA.includes(x)).join('');
+const syAfficherCode=c=>c.match(/.{1,4}/g).join('-');
+let _syClesCache=null;
+async function syCles(code){
+  if(_syClesCache?.code===code) return _syClesCache;
+  const base=await crypto.subtle.importKey('raw', syOctets(code), 'HKDF', false, ['deriveBits','deriveKey']);
+  const p=info=>({name:'HKDF', hash:'SHA-256', salt:syOctets('edt-labo-rt/sync/v1'), info:syOctets(info)});
+  const bits=async info=>new Uint8Array(await crypto.subtle.deriveBits(p(info), base, 256));
+  _syClesCache={ code,
+    id: syB64u(await bits('id')).slice(0,22),
+    jeton: syB64u(await bits('jeton')).slice(0,43),
+    cle: await crypto.subtle.deriveKey(p('cle'), base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']) };
+  return _syClesCache;
+}
+async function syCompresser(txt, sens){
+  const flux=new Blob([txt]).stream().pipeThrough(sens==='c'?new CompressionStream('deflate-raw'):new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(flux).arrayBuffer());
+}
+async function syChiffrer(obj, k){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM', iv, additionalData:syOctets(k.id)}, k.cle, await syCompresser(JSON.stringify(obj),'c')));
+  const tout=new Uint8Array(12+ct.length); tout.set(iv); tout.set(ct,12);
+  return syB64u(tout);
+}
+async function syDechiffrer(blob, k){
+  const o=syDeB64u(blob);
+  const clair=await crypto.subtle.decrypt({name:'AES-GCM', iv:o.slice(0,12), additionalData:syOctets(k.id)}, k.cle, o.slice(12));
+  return JSON.parse(new TextDecoder().decode(await syCompresser(clair,'d')));
+}
+// Empreinte stable (clés triées) pour savoir si quelque chose a changé
+function syEmpreinte(o){
+  const tri=x=>Array.isArray(x)?x.map(tri):(x&&typeof x==='object')?Object.keys(x).sort().reduce((r,c)=>(r[c]=tri(x[c]),r),{}):x;
+  const s=JSON.stringify(tri(o)); let h=2166136261;
+  for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); }
+  return (h>>>0).toString(36)+'.'+s.length;
+}
+
+/* Un aller-retour avec la boîte */
+async function synchroniser(manuel){
+  const e=syEtat(); if(!e?.code) return;
+  if(!navigator.onLine){ if(manuel) showToast('Pas de réseau : synchro au retour de la connexion'); return; }
+  if(_syEnCours) return _syEnCours;
+  _syEnCours=(async()=>{
+    const k=await syCles(e.code), url=`${CF_WORKER}sync/${k.id}`;
+    let recu=false;
+    for(let essai=0; essai<3; essai++){
+      const etat=syEtat()||e, local=syCollecter();
+      const r=await fetch(`${url}?v=${etat.v||0}`, {cache:'no-store'});
+      let fusion, v;
+      if(r.status===304){
+        // Rien de neuf dans la boîte : seulement envoyer si on a changé ici
+        if(syEmpreinte(local)===etat.empreinte) return syMajEtat({...etat, date:Date.now()}), recu;
+        fusion=local; v=etat.v;
+      } else if(r.status===404){ fusion=local; v=0; }
+      else if(r.ok){
+        const j=await r.json(); v=j.v;
+        const distant=await syDechiffrer(j.blob, k);
+        fusion=syFusion(local, distant);
+        if(syAppliquer(fusion)) recu=true;
+        fusion=syCollecter();
+        if(syEmpreinte(fusion)===syEmpreinte(distant)) return syMajEtat({...etat, v, empreinte:syEmpreinte(fusion), date:Date.now()}), recu;
+      } else throw new Error('HTTP '+r.status);
+      // Envoyer la version fusionnée, seulement si la boîte n'a pas bougé entre-temps
+      const p=await fetch(url, {method:'PUT', headers:{'Content-Type':'application/json','X-Jeton':k.jeton},
+        body:JSON.stringify({base:v, blob:await syChiffrer(fusion, k)})});
+      if(p.status===409) continue;                 // un autre appareil est passé avant : on recommence
+      if(p.status===403) throw new Error('code refusé par le serveur');
+      if(!p.ok) throw new Error('HTTP '+p.status);
+      const j=await p.json();
+      return syMajEtat({...etat, v:j.v, empreinte:syEmpreinte(fusion), date:Date.now()}), recu;
+    }
+    throw new Error('trop de conflits, réessaie');
+  })();
+  try{
+    const recu=await _syEnCours;
+    if(recu) showToast('Synchronisé : changements reçus de l\'autre appareil');
+    else if(manuel) showToast('Synchronisé');
+  }catch(err){
+    const msg=err?.name==='TypeError' ? 'serveur injoignable' : String(err.message||err);
+    if(syEtat()) syEcrireEtat({...syEtat(), erreur:msg});
+    if(manuel) showToast('Synchro impossible : '+(err.message||err));
+  }finally{ _syEnCours=null; syRendre(); }
+}
+function syMajEtat(e){ delete e.erreur; syEcrireEtat(e); }
+function syPlanifier(){
+  if(!syEtat()?.code) return;
+  clearTimeout(_syMinuterie);
+  _syMinuterie=setTimeout(()=>synchroniser(false), 3000);
+}
+// Déclencheurs : ouverture, retour sur l'appli (si > 30 s), retour du réseau
+setTimeout(()=>synchroniser(false), 2500);
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden && Date.now()-(syEtat()?.date||0) > 30000) synchroniser(false);
+});
+addEventListener('online',()=>synchroniser(false));
+
+/* Appairage */
+async function syLier(code, depuisLien){
+  code=syNormaliser(code);
+  if(code.length<20){ showToast('Code incomplet : il fait 20 caractères'); return false; }
+  const e=syEtat();
+  if(e?.code===code){ if(!depuisLien) showToast('Cet appareil est déjà lié avec ce code'); synchroniser(true); return true; }
+  if(e?.code && !confirm('Cet appareil est déjà synchronisé avec un autre code. Le remplacer ? Tes données restent sur l\'appareil.')) return false;
+  syEcrireEtat({code, v:0});
+  await synchroniser(!depuisLien);
+  syRendre();
+  return !syEtat()?.erreur;
+}
+async function syCreer(){
+  const e=syEtat();
+  if(!e?.code){ syEcrireEtat({code:syNouveauCode(), v:0}); await synchroniser(false); }
+  syMontrerQR();
+}
+function syLien(code){ return `${location.origin}${location.pathname}#sync=${code}`; }
+function syChargerQR(){
+  if(window.qrcode) return Promise.resolve();
+  return new Promise((ok,ko)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+    s.onload=ok; s.onerror=ko; document.head.appendChild(s);
+  });
+}
+async function syMontrerQR(){
+  const e=syEtat(); if(!e?.code) return;
+  const lien=syLien(e.code);
+  const el=flOuvrir(`<article class="fc sy-vue">
+    <div class="fc-haut"><h2 class="fc-titre" style="margin:0">Lier un appareil</h2>
+      <button class="fc-fermer" onclick="flFermer()" aria-label="Fermer"><svg class="px" data-px="close" aria-hidden="true"></svg></button></div>
+    <p class="sy-aide">Sur l'autre appareil, scanne ce code avec l'appareil photo, ou ouvre l'appli et tape le code dans
+      <b>Paramètres → Synchronisation → J'ai un code</b>.</p>
+    <div class="sy-qr" id="sy-qr" aria-label="QR code de liaison">…</div>
+    <div class="sy-code" aria-label="Code de liaison">${syAfficherCode(e.code)}</div>
+    <div class="sy-actions">
+      <button type="button" class="btn-sm" onclick="navigator.clipboard?.writeText('${syAfficherCode(e.code)}').then(()=>showToast('Code copié'))">Copier le code</button>
+      <button type="button" class="btn-sm" onclick="navigator.clipboard?.writeText('${lien}').then(()=>showToast('Lien copié'))">Copier le lien</button>
+    </div>
+    <p class="sy-aide petite">Ce code donne accès à tes notes et tâches : ne le partage qu'avec tes propres appareils.</p>
+  </article>`,{label:'Lier un appareil', x:innerWidth/2-170, y:60});
+  try{
+    await syChargerQR();
+    const q=qrcode(0,'M'); q.addData(lien); q.make();
+    const boite=el.querySelector('#sy-qr');
+    if(boite) boite.innerHTML=q.createSvgTag({cellSize:4, margin:2, scalable:true});
+  }catch(err){
+    const boite=el.querySelector('#sy-qr'); if(boite) boite.textContent='QR code indisponible hors ligne : utilise le code ci-dessous.';
+  }
+  requestAnimationFrame(()=>{ if(_fl?.mobile) flMesurer(); else flRecaler(); });
+}
+function syArreter(){
+  if(!confirm('Arrêter la synchro sur cet appareil ? Tes données restent ici, elles ne seront simplement plus partagées.')) return;
+  syEcrireEtat(null); _syClesCache=null; syRendre(); showToast('Synchro arrêtée sur cet appareil');
+}
+function syDepuis(t){
+  if(!t) return 'jamais';
+  const m=Math.round((Date.now()-t)/60000);
+  return m<1?'à l\'instant':m<60?`il y a ${m} min`:m<1440?`il y a ${Math.round(m/60)} h`:`le ${new Date(t).toLocaleDateString('fr-FR')}`;
+}
+function syRendre(){
+  const box=document.getElementById('sync-contenu'); if(!box) return;
+  const e=syEtat();
+  if(!e?.code){
+    box.innerHTML=`<div class="sy-ligne-actions">
+        <button type="button" class="btn-main" onclick="syCreer()">Lier un autre appareil</button>
+        <button type="button" class="btn-sm" onclick="document.getElementById('sy-saisie-zone').hidden=false;document.getElementById('sy-saisie').focus()">J'ai un code</button>
+      </div>
+      <div id="sy-saisie-zone" class="sy-saisie-zone" hidden>
+        <input type="text" id="sy-saisie" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="30" aria-label="Code de liaison">
+        <button type="button" class="btn-main" onclick="syLier(document.getElementById('sy-saisie').value)">Lier</button>
+      </div>`;
+    box.querySelector('#sy-saisie')?.addEventListener('keydown',ev=>{ if(ev.key==='Enter') syLier(ev.target.value); });
+    return;
+  }
+  box.innerHTML=`<div class="sy-statut${e.erreur?' erreur':''}">${e.erreur?'Dernière tentative échouée : '+escapeHtml(e.erreur):'Synchronisé '+syDepuis(e.date)}</div>
+    <div class="sy-ligne-actions">
+      <button type="button" class="btn-main" onclick="synchroniser(true)">Synchroniser maintenant</button>
+      <button type="button" class="btn-sm" onclick="syMontrerQR()">Lier un autre appareil</button>
+      <button type="button" class="btn-sm" onclick="syArreter()">Arrêter ici</button>
+    </div>`;
+}
+// Lien #sync=… ouvert depuis le QR code : on lie puis on efface le code de l'adresse
+(function(){
+  const m=location.hash.match(/(?:^#|&)sync=([A-Za-z0-9-]+)/);
+  if(!m) return;
+  history.replaceState(null,'',location.pathname+location.search);
+  addEventListener('load',()=>setTimeout(async()=>{
+    showToast(await syLier(m[1], true) ? 'Appareil lié : tes données sont synchronisées'
+      : 'Code enregistré, mais le serveur ne répond pas : la synchro réessaiera toute seule');
+  },600));
+})();
+
 /* ============================================================
    NOTIFICATIONS PUSH
    Le Worker de worker-push/ envoie un push vide toutes les fois qu'il y a
