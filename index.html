@@ -2950,7 +2950,152 @@ header.topbar .toggle-wrap{position:static;}
 }
 .hl-garder[aria-pressed="true"] .px{color:var(--ok);}
 .hl-garder:disabled{opacity:.5;cursor:default;}
-@media(max-width:700px){ .hl-garder-txt{display:none;} .hl-garder{padding:0 9px;height:36px;} }
+.hl-garder[aria-pressed="true"] .px[data-px="star"]{color:var(--warn,#e8b04a);}
+/* Téléphone : l'en-tête passe sur deux lignes. Ligne 1 : navigation.
+   Ligne 2 : actions avec un vrai libellé (une disquette seule ne se
+   comprend pas). */
+@media(max-width:700px){
+  .cal-header{flex-wrap:wrap !important;row-gap:8px;}
+  .cal-actions-zone{order:5;flex:1 1 100% !important;}
+  .cal-actions-zone .cal-header-actions{width:100%;gap:6px;}
+  .hl-garder{padding:0 12px;height:40px;font-size:13px;}
+  .cal-actions-zone .freshness-badge{margin-left:auto;}
+}
+@media(max-width:380px){ .cal-actions-zone .freshness-badge{display:none !important;} }
+/* ── À faire : bouton, badges, liste ── */
+.tb-afaire{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 11px;border-radius:7px;
+  border:1px solid var(--border);background:transparent;color:var(--text2);font:500 12.5px var(--f-ui);cursor:pointer;white-space:nowrap;}
+.tb-afaire:hover{border-color:var(--line);color:var(--text);}
+@media(max-width:700px){ .tb-afaire{display:none;} }
+.ta-badge{min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--acc);color:#fff;
+  font:700 10px/17px var(--f-mono);text-align:center;}
+.ta-badge[hidden]{display:none;}
+.mbn-icon{position:relative;}
+.mbn-icon .ta-badge{position:absolute;top:-5px;right:-11px;}
+.ev-note-point{display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8;margin-right:3px;vertical-align:middle;}
+.ev-todo-badge{font:600 9.5px var(--f-mono);}
+.fc-sec-tete .fc-lien{margin-left:auto;}
+.fc-sec-tete .fc-sec-compte{margin-left:8px;}
+.fc-lien{display:inline-flex;align-items:center;gap:2px;border:0;background:none;color:var(--acc);font:500 12.5px var(--f-ui);cursor:pointer;padding:6px 0;min-height:32px;}
+.fc-lien .px{width:12px;height:12px;}
+.fc-echeance{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.fc-chip{height:30px;padding:0 11px;border-radius:15px;border:1px solid var(--border);background:transparent;color:var(--text2);
+  font:500 12px var(--f-ui);cursor:pointer;}
+.fc-chip[aria-pressed="true"]{border-color:color-mix(in srgb,var(--acc) 60%,transparent);background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--text);}
+.fc-note-ligne{display:flex;align-items:center;gap:12px;width:100%;margin-top:14px;padding:12px 12px;border-radius:10px;
+  border:1px solid var(--border);background:color-mix(in srgb,var(--text) 3%,transparent);color:var(--text);text-align:left;cursor:pointer;min-height:56px;}
+.fc-note-ligne:hover{border-color:var(--line);}
+.fc-note-txt{display:flex;flex-direction:column;min-width:0;flex:1;}
+.fc-note-lib{font:600 12px var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.fc-note-apercu{font:400 14px/1.4 var(--f-ui);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:pre-line;}
+.fc-note-apercu.vide{color:var(--muted);}
+.fc-editeur .fc-haut{align-items:center;}
+.fc-retour{display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 10px 0 4px;border:0;background:none;color:var(--acc);font:600 14px var(--f-ui);cursor:pointer;}
+.fc-editeur .fc-note-etat{margin:0 auto 0 8px;font:500 12px var(--f-ui);color:var(--muted);}
+.fc-editeur-sujet{font:500 13px var(--f-ui);color:var(--muted);margin:4px 0 10px;}
+.fc-note.grande{min-height:calc(60svh);font-size:16px;line-height:1.5;resize:vertical;width:100%;}
+.ta-sous{margin:10px 0 4px;font:600 11px var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.ta-item{display:flex;align-items:flex-start;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);min-height:44px;}
+.ta-item:last-child{border-bottom:0;}
+.ta-item input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--acc);flex-shrink:0;cursor:pointer;}
+.ta-item label{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;cursor:pointer;}
+.ta-texte{font:400 14.5px/1.35 var(--f-ui);color:var(--text);overflow-wrap:anywhere;transition:color .3s,opacity .3s;}
+.ta-meta{font:500 11px var(--f-mono);color:var(--muted);}
+.ta-item.fait .ta-texte{text-decoration:line-through;color:var(--muted);}
+.ta-item.retard .ta-meta{color:var(--danger,#e5534b);}
+.ta-suppr{border:0;background:none;color:var(--muted);width:36px;height:36px;margin:-6px -4px -6px 0;border-radius:8px;cursor:pointer;flex-shrink:0;opacity:.7;}
+.ta-suppr:hover{opacity:1;color:var(--text);background:color-mix(in srgb,var(--text) 6%,transparent);}
+.ta-vue{min-width:min(420px,100%);}
+.ta-vue .fc-haut{display:flex;align-items:center;justify-content:space-between;}
+/* Panneau « À faire » ancré à droite (PC, EDT affiché) */
+.ta-dock[hidden]{display:none !important;}
+@media(min-width:1100px){
+  body.edt-on.ta-dock-on .page{grid-template-columns:300px minmax(0,1fr) 320px;}
+  body.edt-on.ta-dock-on .cal-wrapper{grid-column:2;}
+  .ta-dock{grid-column:3;grid-row:2 / 7;align-self:start;position:sticky;top:12px;
+    max-height:calc(100vh - 24px);overflow-y:auto;overscroll-behavior:contain;
+    background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:14px 14px 10px;
+    animation:taDockEntre .35s cubic-bezier(.32,.72,0,1);}
+  .ta-dock .ta-vue{min-width:0;}
+  .ta-dock .fc-titre{font-size:17px;}
+  .tb-afaire[aria-pressed="true"]{border-color:color-mix(in srgb,var(--acc) 60%,transparent);background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--text);}
+}
+@media(min-width:1100px) and (max-width:1439px){
+  body.edt-on.ta-dock-on .page{grid-template-columns:250px minmax(0,1fr) 272px;column-gap:14px;}
+  .ta-dock{padding:12px 11px 8px;}
+}
+/* En-tête du calendrier selon SA largeur (panneau ouvert ou non) */
+@media(min-width:701px){
+  .cal-wrapper{container-type:inline-size;container-name:cal;}
+  @container cal (max-width:820px){
+    .hl-garder-txt,.cal-sem{display:none;}
+    .hl-garder{padding:0 9px;}
+    .freshness-badge{display:none !important;}
+  }
+  @container cal (max-width:640px){
+    .cal-today-btn{display:none;}
+  }
+}
+@keyframes taDockEntre{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
+@media(prefers-reduced-motion:reduce){ .ta-dock{animation:none;} }
+/* Sélection réduite dans la barre latérale (PC) */
+@media(min-width:1100px){
+  body.edt-on .glass.repli .sel-resume{padding:.7rem .9rem;}
+  /* « Aucun favori… » prenait 4 lignes dans la colonne étroite */
+  body.edt-on .fav-chips > span[style*="italic"]{display:none;}
+  body.edt-on .fav-bar{justify-content:space-between;}
+}
+.ta-ajout{margin-top:10px;}
+.ta-aide{font:500 11px var(--f-mono);color:var(--muted);margin:6px 2px 12px;min-height:14px;}
+.ta-groupe{margin-bottom:14px;}
+.ta-groupe-tete{display:flex;justify-content:space-between;font:600 11px var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;
+  padding:4px 2px;border-bottom:1px solid var(--line);}
+.ta-groupe.retard .ta-groupe-tete{color:var(--danger,#e5534b);}
+.ta-vide{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--muted);padding:28px 10px;font:400 14px/1.45 var(--f-ui);}
+.ta-vide .px{width:32px;height:32px;opacity:.6;}
+.ta-faites summary{cursor:pointer;font:600 12px var(--f-ui);color:var(--muted);padding:10px 2px;}
+.ta-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));z-index:9600;
+  display:flex;align-items:center;gap:14px;padding:8px 8px 8px 16px;border-radius:10px;background:#1c1d21;color:#f3f3f3;
+  box-shadow:0 8px 30px rgba(0,0,0,.35);font:500 13.5px var(--f-ui);animation:bmMonte .3s cubic-bezier(.32,.72,0,1);}
+.ta-toast button{height:36px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:#8ab4ff;font:600 13.5px var(--f-ui);cursor:pointer;}
+@media(max-width:700px){ .ta-toast{bottom:calc(80px + env(safe-area-inset-bottom));} .ta-texte{font-size:15.5px;} }
+.push-ligne{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font:500 14px var(--f-ui);color:var(--text);}
+.push-ligne select{height:36px;font-size:14px;}
+.push-ligne input{width:20px;height:20px;accent-color:var(--acc);}
+.push-etat{font:400 13px/1.4 var(--f-ui);color:var(--muted);margin:6px 0 10px;min-height:1em;}
+.push-actions{display:flex;gap:8px;flex-wrap:wrap;}
+/* Téléphone : les fenêtres passaient SOUS la barre du bas (z-index 500),
+   qui cachait leurs boutons (« Enregistrer » du favori…). */
+@media(max-width:700px){
+  .modal-overlay,.exam-overlay,.annonce-overlay,.free-overlay,.stats-overlay,.week-note-overlay,.custom-overlay{z-index:650 !important;}
+  /* Fenêtre « Épingler » : Annuler / Enregistrer en haut, à la manière
+     d'iOS, loin de la barre du bas et du clavier */
+  html #modal-overlay .modal{display:flex;flex-direction:column;}
+  html #modal-overlay .modal::before{order:-3;}
+  html #modal-overlay .modal h3{order:-2;}
+  html #modal-overlay .modal-btns{order:-1;display:flex;justify-content:space-between;gap:8px;margin:0 0 12px;}
+  html #modal-overlay .modal-btns > button{height:40px;padding:0 16px;font-size:15px;}
+  html #modal-overlay .modal-btns .btn-main{font-weight:700;}
+}
+.cal-sem{font:600 .78em var(--f-mono);color:var(--muted);margin-left:4px;letter-spacing:.02em;}
+@media(max-width:380px){ .cal-sem{display:none;} }
+/* Focus clavier visible sur les éléments non natifs */
+.cal-event:focus-visible,.card:focus-visible,[role="button"]:focus-visible{
+  outline:2px solid var(--acc);outline-offset:2px;z-index:5;
+}
+/* Bandeau « Nouvelle version » */
+.bandeau-maj{
+  position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  z-index:9000;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;
+  background:var(--card,#1a1c20);color:var(--text);border:1px solid var(--line);border-radius:10px;
+  box-shadow:var(--ombre-flottant,0 8px 30px rgba(0,0,0,.35));font:500 13px var(--f-ui);
+  animation:bmMonte .35s cubic-bezier(.32,.72,0,1);max-width:calc(100vw - 24px);
+}
+@keyframes bmMonte{from{opacity:0;transform:translate(-50%,16px);}to{opacity:1;transform:translate(-50%,0);}}
+.bandeau-maj .bm-ok{height:36px;padding:0 14px;border-radius:7px;border:0;background:var(--acc);color:#fff;font:600 13px var(--f-ui);cursor:pointer;}
+.bandeau-maj .bm-non{height:36px;width:36px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;}
+.bandeau-maj span{white-space:nowrap;}
+@media(max-width:700px){ .bandeau-maj{bottom:calc(76px + env(safe-area-inset-bottom));width:max-content;} }
 /* Liste dans les paramètres */
 .hl-aide{margin:2px 0 8px;line-height:1.45;}
 .hl-liste{display:flex;flex-direction:column;}
@@ -3237,7 +3382,7 @@ button,a,.card,.tab,.cal-event,.sc-jour,.fav-chip{touch-action:manipulation;}
   body.edt-on .page{
     display:grid;grid-template-columns:330px minmax(0,1fr);
     grid-template-rows:auto auto auto auto auto 1fr;
-    column-gap:20px;max-width:1560px;margin:0 auto;padding:1.25rem 1.5rem 3rem;
+    column-gap:20px;max-width:none;margin:0;padding:1.25rem clamp(1rem,1.6vw,2rem) 3rem;
   }
   body.edt-on .page-inner{display:contents;}
   body.edt-on header.topbar{grid-column:1/-1;grid-row:1;}
@@ -3601,6 +3746,10 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
       <svg class="px" data-px="download" aria-hidden="true" focusable="false"></svg>
       <span>Installer</span>
     </button>
+    <button class="tb-afaire" onclick="ouvrirAFaire()" title="Mes tâches (raccourci T)">
+      <svg class="px" data-px="todo" aria-hidden="true" focusable="false"></svg>
+      <span>À faire</span><span class="ta-badge" hidden></span>
+    </button>
     <button class="tb-cmdk" onclick="ouvrirPalette()" aria-label="Rechercher un groupe, un prof, une salle ou une action">
       <svg class="px" data-px="search" aria-hidden="true" focusable="false"></svg>
       <span class="tb-cmdk-txt">Chercher</span><kbd>Ctrl K</kbd>
@@ -3781,8 +3930,13 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
         <button class="cal-nav" onclick="isMobile?navJour(1):navSemaine(1)" title="Suivant" style="flex-shrink:0;">›</button>
 
         <!-- Right side: actions -->
-        <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;flex-wrap:nowrap;">
+        <div class="cal-actions-zone" style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;flex-wrap:nowrap;">
           <div class="cal-header-actions">
+            <button class="hl-garder" id="btn-fav-cal" onclick="basculerFavoriCal()" aria-pressed="false"
+                    title="Épingler cette sélection dans les favoris">
+              <svg class="px" data-px="star" aria-hidden="true" focusable="false"></svg>
+              <span class="hl-garder-txt">Favori</span>
+            </button>
             <button class="hl-garder" id="btn-hors-ligne" onclick="basculerHorsLigne()" aria-pressed="false"
                     title="Garder cet emploi du temps sur l'appareil, pour le consulter sans réseau">
               <svg class="px" data-px="save" aria-hidden="true" focusable="false"></svg>
@@ -3871,6 +4025,25 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
         Ceux que tu gardes avec <b>Garder hors ligne</b> restent jusqu'à ce que tu les retires.
       </div>
       <div class="hl-liste" id="hl-liste"></div>
+    </div>
+
+    <div class="custom-section params-section-card" id="push-section" hidden>
+      <div class="params-section-title">Notifications</div>
+      <div class="custom-row-sub hl-aide">
+        Un rappel avant ton premier cours, et une alerte si un cours des 48 prochaines heures
+        est ajouté, supprimé, déplacé ou change de salle. Marche même appli fermée.
+      </div>
+      <label class="push-ligne"><span>Rappel avant le premier cours</span>
+        <select id="push-rappel">
+          <option value="0">Jamais</option><option value="15">15 min avant</option>
+          <option value="30" selected>30 min avant</option><option value="60">1 h avant</option>
+        </select></label>
+      <label class="push-ligne"><span>Changements d'emploi du temps</span><input type="checkbox" id="push-changements" checked></label>
+      <div class="push-etat" id="push-etat" aria-live="polite"></div>
+      <div class="push-actions">
+        <button type="button" class="btn-main" id="push-btn" onclick="pushActiver()">Activer sur cet appareil</button>
+        <button type="button" class="btn-sm" id="push-off" onclick="pushDesactiver()" hidden>Désactiver</button>
+      </div>
     </div>
 
     <div class="custom-section params-section-card">
@@ -4162,10 +4335,8 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
 <!-- MOBILE BOTTOM NAV -->
 <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
   <button class="mbn-btn" id="mbn-today" onclick="mbnToday()"><span class="mbn-icon">🕐</span><span class="mbn-label">Aujourd'hui</span></button>
-  <button class="mbn-btn" id="mbn-week" onclick="mbnWeek()"><span class="mbn-icon">🗓</span><span class="mbn-label">Semaine</span></button>
+  <button class="mbn-btn" id="mbn-afaire" onclick="ouvrirAFaire()"><span class="mbn-icon"><svg class="px" data-px="todo" aria-hidden="true" focusable="false"></svg><span class="ta-badge" hidden></span></span><span class="mbn-label">À faire</span></button>
   <button class="mbn-btn" id="mbn-favs" onclick="mbnFavs()"><span class="mbn-icon">⭐</span><span class="mbn-label">Favoris</span></button>
-  <!-- La barre du bas sert à naviguer (HIG) : la recherche y a sa place,
-       les stats restent à un geste via « Semestre » et Ctrl+K -->
   <button class="mbn-btn" id="mbn-search" onclick="ouvrirPalette()"><span class="mbn-icon">🔍</span><span class="mbn-label">Chercher</span></button>
 </nav>
 
@@ -4202,7 +4373,7 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
 <div class="kbd-hint" id="kbd-hint">
   <kbd>←</kbd><kbd>→</kbd> semaine · <kbd>T</kbd> auj. · <kbd>F</kbd> recherche
 </div>
-<div class="ev-popup" id="ev-popup" style="display:none;"></div>
+
 
 <!-- EXAM MODAL -->
 <div class="exam-overlay" id="exam-overlay" onclick="if(event.target===this)closeExamModal()">
@@ -4379,7 +4550,6 @@ function applyTheme(dark){
   if(darkToggle) darkToggle.checked  = dark;
   if(themeIcon) themeIcon.textContent = dark ? '🌙' : '☀️';
   localStorage.setItem('ade-dark', dark?'1':'0');
-  updateFavicon();
 }
 // basculerThemeAnime (script « motion » en fin de page) ajoute le dévoilement circulaire
 if(darkToggle) darkToggle.addEventListener('change', ()=>
@@ -4399,7 +4569,6 @@ function applyColorTheme(color){
   document.querySelectorAll('.theme-swatch').forEach(s=>{
     s.classList.toggle('active', s.dataset.color===color);
   });
-  updateFavicon();
 }
 function setColorTheme(color, evt){
   // Clear saved custom hex when switching to a preset
@@ -4422,15 +4591,6 @@ function setColorTheme(color, evt){
 function openCustom(){ document.getElementById('custom-overlay').classList.add('open'); }
 function closeCustom(){ document.getElementById('custom-overlay').classList.remove('open'); }
 
-/* ============================================================
-   FAVICON DYNAMIQUE — change selon thème
-   ============================================================ */
-function updateFavicon(){
-  // Le favicon est maintenant l'icône pixel art du labo (icons/favicon-*.png,
-  // déclarés dans <head>). On ne le régénère plus selon le thème : l'icône
-  // reste la même dans l'onglet, sur l'écran d'accueil et dans le manifeste.
-}
-
 // Init
 const savedTheme = localStorage.getItem('ade-dark');
 applyTheme(savedTheme === null ? true : savedTheme === '1');
@@ -4439,9 +4599,8 @@ applyColorTheme(savedColor);
 // Load custom hex after color theme (so it overrides preset accent)
 (function loadCustomHex(){
   const saved = localStorage.getItem('ade-custom-hex');
-  if(saved) setTimeout(()=>{ applyCustomColorInline(saved); updateFavicon(); }, 0);
+  if(saved) setTimeout(()=>{ applyCustomColorInline(saved); }, 0);
 })();
-updateFavicon();
 
 /* ============================================================
    TABS
@@ -4546,6 +4705,10 @@ function buildGrid(groupKey){
         onclick="copierMailProf(event, ${item.id})" aria-label="Copier l'adresse de ${item.nom}">
         <svg class="px" data-px="mail" aria-hidden="true" focusable="false"></svg></button>` : ''}
     `;
+    card.setAttribute('role','checkbox');
+    card.setAttribute('tabindex','0');
+    card.setAttribute('aria-checked','false');
+    card.setAttribute('aria-label', item.nom);
     card.addEventListener('click', ()=>toggle(item.id, groupKey));
     grid.appendChild(card);
   });
@@ -4579,6 +4742,9 @@ function applySelection(ids){
 }
 
 function refresh(groupKey){
+  Object.values(GROUPS).flat().forEach(i=>{
+    document.getElementById('card-'+i.id)?.setAttribute('aria-checked', selected.has(i.id)?'true':'false');
+  });
   const grp = GROUPS[groupKey];
   const cnt = grp.filter(i=>selected.has(i.id)).length;
   const badge = document.getElementById('badge-'+groupKey);
@@ -4923,6 +5089,7 @@ function majBoutonsJours(){
    L'erreur est désormais affichée et journalisée. */
 function renderCalendar(){
   try{
+    if(typeof taMigrer==='function') taMigrer(false);   // anciennes tâches par séance
     return _renderCalendarInterne();
   }catch(e){
     console.error('[EDT] échec du rendu du calendrier :', e);
@@ -4956,6 +5123,11 @@ function _renderCalendarInterne(){
   }else{
     calTitle.textContent=`${monday.getDate()} ${MONTHS_FR[monday.getMonth()]} – ${friday.getDate()} ${MONTHS_FR[friday.getMonth()]} ${monday.getFullYear()}`;
   }
+  // Numéro de semaine ISO : c'est ainsi qu'on parle des semaines à l'IUT
+  { const d=new Date(Date.UTC(monday.getFullYear(),monday.getMonth(),monday.getDate()+3));
+    const s1=new Date(Date.UTC(d.getUTCFullYear(),0,4));
+    const n=1+Math.round(((d-s1)/864e5-3+((s1.getUTCDay()+6)%7))/7);
+    calTitle.insertAdjacentHTML('beforeend',` <span class="cal-sem" title="Semaine ${n}">S${n}</span>`); }
 
   // Mobile day tabs
   buildMobileDayTabs(days, today);
@@ -5080,10 +5252,8 @@ function _renderCalendarInterne(){
         _evDataStore.set(evKey, {title:rawTitle,loc,timeStr,desc:ev.desc||'',prof,start:ev.start.toISOString(),end:ev.end.toISOString()});
         const noteK=makeNoteKey(rawTitle,ev.start.toISOString());
         const hasNote=!!localStorage.getItem(noteK);
-        const taskK=makeTaskKey(rawTitle,ev.start.toISOString());
-        let _tks=[]; try{_tks=JSON.parse(localStorage.getItem(taskK)||'[]');}catch(e){}
-        const hasTasks=_tks.length>0;
-        const openTasks=_tks.filter(t=>!t.done).length;
+        const openTasks=taOuvertesPour(rawTitle, ev.start);
+        const hasTasks=openTasks>0;
         // Cours en cours : badge + barre de progression live
         const isCurrent = isToday && ev.start<=now && now<ev.end;
         const isPast    = ev.end <= now;   // cours terminé (jours précédents inclus)
@@ -5096,16 +5266,20 @@ function _renderCalendarInterne(){
           <div class="ev-progress"><div class="ev-progress-fill" style="width:${pct}%"></div></div>`;
         }
         const hue=subjectHue(rawTitle);
-        html+=`<div class="cal-event ${cc}${isNE?' ev-ne':''}${isExam?' ev-exam':''}${isCurrent?' ev-current':''}${isPast?' ev-past':''}" 
+        // Lecteur d'écran : une phrase complète plutôt que des fragments
+        const ariaEv=[`${day.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric'})} ${timeStr}`, title, ctype!=='Autre'?ctype:'', salleShort?`salle ${salleShort}`:'', prof,
+                      isNE?'non encadré':'', isExam?'examen':'', isCurrent?'en cours':'',
+                      hasNote?'avec note':'', openTasks?`${openTasks} tâche${openTasks>1?'s':''}`:''].filter(Boolean).join(', ');
+        html+=`<div class="cal-event ${cc}${isNE?' ev-ne':''}${isExam?' ev-exam':''}${isCurrent?' ev-current':''}${isPast?' ev-past':''}"
           style="--evh:${hue};position:absolute;left:2px;right:2px;top:${Math.max(0,top)}px;height:${height}px"
-          data-evkey="${evKey}"
+          data-evkey="${evKey}" role="button" tabindex="0" aria-label="${escapeHtml(ariaEv)}"
           onclick="showEvPopupByKey(event,${evKey})">
-          ${(hasNote||hasTasks)?`<div class="ev-note-indicator">${hasNote?'📝':''}${hasTasks?`<span class="ev-todo-badge">${openTasks||'✓'}</span>`:''}</div>`:''}
+          ${(hasNote||hasTasks)?`<div class="ev-note-indicator" aria-hidden="true">${hasNote?'<span class="ev-note-point"></span>':''}${hasTasks?`<span class="ev-todo-badge">☑ ${openTasks}</span>`:''}</div>`:''}
           ${liveHtml}
-          <div class="ev-time">${timeStr}${typeBadge}${isNE?' <span class="ne-badge">NE</span>':''}${isExam?' <span class="exam-badge">EXAM</span>':''}</div>
-          ${salleShort?`<div class="ev-loc">📍 ${salleShort}</div>`:''}
-          <div class="ev-title" style="font-size:10px;opacity:.8;font-weight:500">${title}</div>
-          ${prof?`<div class="ev-prof">👤 ${prof}</div>`:''}
+          <div class="ev-time" aria-hidden="true">${timeStr}${typeBadge}${isNE?' <span class="ne-badge">NE</span>':''}${isExam?' <span class="exam-badge">EXAM</span>':''}</div>
+          ${salleShort?`<div class="ev-loc" aria-hidden="true">📍 ${escapeHtml(salleShort)}</div>`:''}
+          <div class="ev-title" aria-hidden="true" style="font-size:11px;opacity:.85;font-weight:500">${escapeHtml(title)}</div>
+          ${prof?`<div class="ev-prof" aria-hidden="true">👤 ${escapeHtml(prof)}</div>`:''}
         </div>`;
       });
       html+=`</div>`;
@@ -5479,198 +5653,25 @@ function makeTaskKey(title, start){
   return makeNoteKey(title,start).replace('ade-evnote-','ade-evtasks-');
 }
 let _currentNoteKey=null;
-let _currentTaskKey=null;
+// L'ancienne popup flottante (#ev-popup) a été remplacée par la fiche en feuille
+// (showEvPopup, plus bas) et les tâches par le module « À faire ».
 
-function showEvPopup(evt, encodedData){
-  evt.stopPropagation();
-  const popup=document.getElementById('ev-popup');
-  const data=JSON.parse(decodeURIComponent(encodedData));
-  _currentNoteKey=makeNoteKey(data.title,data.start||'');
-  _currentTaskKey=makeTaskKey(data.title,data.start||'');
-  const savedNote=localStorage.getItem(_currentNoteKey)||'';
-  popup.innerHTML=`
-    <button class="ev-popup-close" onclick="document.getElementById('ev-popup').style.display='none'">✕</button>
-    <h4 style="padding-right:1.5rem">${data.title}</h4>
-    <div class="ep-meta">
-      <span>🕐 ${data.timeStr}</span>
-      ${data.loc?`<span>📍 ${data.loc}</span>`:''}
-      ${data.prof?`<span>👤 ${data.prof}</span>`:''}
-      ${data.desc?`<span style="opacity:.65;font-size:10.5px;margin-top:1px">${data.desc.substring(0,100)}</span>`:''}
-    </div>
-    <textarea class="ev-note-area" id="ev-note-textarea" placeholder="Notes personnelles… (ctrl+enter pour sauvegarder)">${savedNote}</textarea>
-    <button class="ev-note-save" onclick="saveEvNote()">💾 Sauvegarder la note</button>
-    <div class="ev-todo-head">✓ À faire</div>
-    <div class="ev-checklist" id="ev-checklist"></div>
-    <div class="ev-todo-add">
-      <input type="text" id="ev-add-input" placeholder="Nouvelle tâche…" maxlength="120">
-      <button class="wn-add-btn" onclick="evAddTask()">+ Ajouter</button>
-    </div>
-  `;
-  popup.style.display='block';
-  popup.onclick=e=>e.stopPropagation();
-  renderEvChecklist(evGetTasks());
-
-  // ctrl+enter to save
-  const ta=popup.querySelector('#ev-note-textarea');
-  if(ta) ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) saveEvNote();});
-  const ai=popup.querySelector('#ev-add-input');
-  if(ai) ai.addEventListener('keydown',e=>{if(e.key==='Enter') evAddTask();});
-
-  // Position
-  const vw=window.innerWidth, vh=window.innerHeight;
-  let x=evt.clientX+14, y=evt.clientY+14;
-  if(x+325>vw) x=evt.clientX-335;
-  if(y+270>vh) y=evt.clientY-280;
-  if(x<8) x=8; if(y<8) y=8;
-  popup.style.left=x+'px';popup.style.top=y+'px';
-
-  setTimeout(()=>document.addEventListener('click',closePopupOnce,{once:true}),50);
-}
-function closePopupOnce(){document.getElementById('ev-popup').style.display='none';}
-
-function saveEvNote(){
-  if(!_currentNoteKey) return;
-  const area=document.getElementById('ev-note-textarea');
-  if(!area) return;
-  const val=area.value.trim();
-  if(val) localStorage.setItem(_currentNoteKey,val);
-  else localStorage.removeItem(_currentNoteKey);
-  showToast(val?'📝 Note sauvegardée !':'🗑 Note supprimée');
-  document.getElementById('ev-popup').style.display='none';
-  if(document.getElementById('cal-body').style.display==='block') renderCalendar();
-}
-
-/* ---- Tâches par cours (checklist dans le popup) ---- */
-function evGetTasks(){
-  try{ return JSON.parse(localStorage.getItem(_currentTaskKey)||'[]'); }catch(e){ return []; }
-}
-function evSaveTasks(tasks){
-  if(tasks.length) localStorage.setItem(_currentTaskKey, JSON.stringify(tasks));
-  else localStorage.removeItem(_currentTaskKey);
-}
-function renderEvChecklist(tasks){
-  const el=document.getElementById('ev-checklist');
-  if(!el) return;
-  if(!tasks.length){ el.innerHTML='<div style="font-size:11.5px;color:var(--muted);padding:.2rem 0;font-style:italic;">Aucune tâche pour ce cours.</div>'; return; }
-  el.innerHTML=tasks.map((t,i)=>`
-    <div class="wn-item${t.done?' done':''}">
-      <input type="checkbox" id="evc-${i}" ${t.done?'checked':''} onchange="evToggleTask(${i})">
-      <label for="evc-${i}">${escapeHtml(t.text)}</label>
-      <button onclick="evDeleteTask(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:0;margin-left:auto;flex-shrink:0;" title="Supprimer">✕</button>
-    </div>`).join('');
-}
-function evAddTask(){
-  const inp=document.getElementById('ev-add-input');
-  if(!inp||!inp.value.trim()) return;
-  const tasks=evGetTasks();
-  tasks.push({text:inp.value.trim(),done:false});
-  evSaveTasks(tasks);
-  inp.value='';
-  renderEvChecklist(tasks);
-  if(typeof updateNotesPanel==='function') updateNotesPanel();
-  if(document.getElementById('cal-body').style.display==='block') renderCalendar();
-}
-function evToggleTask(i){
-  const tasks=evGetTasks(); if(!tasks[i]) return;
-  tasks[i].done=!tasks[i].done;
-  evSaveTasks(tasks);
-  if(typeof haptic==='function') haptic(tasks[i].done?[8,4,8]:[4]);
-  renderEvChecklist(tasks);
-  if(typeof updateNotesPanel==='function') updateNotesPanel();
-}
-function evDeleteTask(i){
-  const tasks=evGetTasks();
-  tasks.splice(i,1);
-  evSaveTasks(tasks);
-  renderEvChecklist(tasks);
-  if(typeof updateNotesPanel==='function') updateNotesPanel();
-  if(document.getElementById('cal-body').style.display==='block') renderCalendar();
-}
 // Échappement pour le texte des tâches (elles viennent de l'utilisateur)
 function escapeHtml(str){
-  return String(str).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+  return String(str).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 /* ============================================================
    PANNEAU CONTEXTUEL — notes & tâches de ce qui est à l'écran
    ============================================================ */
-// Déployé par défaut sur grand écran (barre latérale), replié sur mobile (feuille).
-let _npOpen = !!(window.matchMedia && window.matchMedia('(min-width:1200px)').matches);
-function toggleNotesPanel(){
-  _npOpen=!_npOpen;
-  const p=document.getElementById('notes-panel');
-  if(p) p.classList.toggle('np-open', _npOpen);
-  document.body.classList.toggle('np-expanded', _npOpen);
-}
-
-function panelToggle(key, i){
-  let arr=[]; try{ arr=JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){}
-  if(!arr[i]) return;
-  arr[i].done=!arr[i].done;
-  localStorage.setItem(key, JSON.stringify(arr));
-  if(typeof haptic==='function') haptic(arr[i].done?[8,4,8]:[4]);
-  updateNotesPanel();
-  if(document.getElementById('cal-body')?.style.display==='block') renderCalendar();
-}
-
 function updateNotesPanel(){
+  // Panneau fixe retiré : il couvrait le calendrier. Les tâches sont dans
+  // « À faire », les notes dans la fiche du cours (point sur le cours).
   const panel=document.getElementById('notes-panel');
-  if(!panel) return;
-  const calShown=document.getElementById('cal-body')?.style.display==='block';
-  if(!calShown){ document.body.classList.remove('notes-open'); panel.innerHTML=''; return; }
-
-  const monday=getCalendarMonday();
-  const days=getWeekDays(monday);
-  // Jours réellement à l'écran : la semaine sur desktop, le seul jour affiché sur mobile.
-  const visibleDays = isMobile ? [days[currentDayOffset]].filter(Boolean) : days;
-  const entries=[];
-  const seen=new Set();
-  Object.values(allEventsById||{}).forEach(list=>(list||[]).forEach(ev=>{
-    if(!visibleDays.some(d=>memeJourParis(ev.start,d))) return;
-    const sig=(ev.title||'')+'|'+ev.start.toISOString();
-    if(seen.has(sig)) return; seen.add(sig);
-    const nKey=makeNoteKey(ev.title,ev.start.toISOString());
-    const tKey=makeTaskKey(ev.title,ev.start.toISOString());
-    const note=(localStorage.getItem(nKey)||'').trim();
-    let tasks=[]; try{ tasks=JSON.parse(localStorage.getItem(tKey)||'[]'); }catch(e){}
-    if(!note && !tasks.length) return;
-    entries.push({title:ev.title||'Sans titre', when:fmtTime(ev.start), note, tasks, tKey, sort:ev.start.getTime()});
-  }));
-  entries.sort((a,b)=>a.sort-b.sort);
-
-  let weekBlock='';
-  try{
-    const wnKey=weekNoteKey(monday), wtKey=weekTaskKey(monday);
-    const wNote=(localStorage.getItem(wnKey)||'').trim();
-    let wTasks=[]; try{ wTasks=JSON.parse(localStorage.getItem(wtKey)||'[]'); }catch(e){}
-    if(wNote || wTasks.length){
-      weekBlock=`<div class="np-entry"><div class="np-title">Semaine<span class="np-when">${monday.getDate()}/${monday.getMonth()+1}</span></div>`+
-        (wNote?`<div class="np-note">${escapeHtml(wNote)}</div>`:'')+
-        (wTasks.length?`<div class="np-tasks">`+wTasks.map((t,i)=>`<label class="np-task${t.done?' done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="panelToggle('${wtKey}',${i})"><span>${escapeHtml(t.text)}</span></label>`).join('')+`</div>`:'')+
-        `</div>`;
-    }
-  }catch(e){}
-
-  if(!entries.length && !weekBlock){ document.body.classList.remove('notes-open'); panel.innerHTML=''; return; }
-
-  const count=entries.length + (weekBlock?1:0);
-  const rows=entries.map(e=>`<div class="np-entry"><div class="np-title">${escapeHtml(e.title)}<span class="np-when">${e.when}</span></div>`+
-      (e.note?`<div class="np-note">${escapeHtml(e.note)}</div>`:'')+
-      (e.tasks.length?`<div class="np-tasks">`+e.tasks.map((t,i)=>`<label class="np-task${t.done?' done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="panelToggle('${e.tKey}',${i})"><span>${escapeHtml(t.text)}</span></label>`).join('')+`</div>`:'')+
-      `</div>`).join('');
-
-  panel.innerHTML=
-    `<button class="np-head" type="button" onclick="toggleNotesPanel()" aria-label="Afficher les notes et tâches">`+
-      `<span class="np-head-txt">Notes &amp; tâches</span>`+
-      `<span class="np-count">${count}</span>`+
-      `<svg class="px np-chevron" data-px="chevU" aria-hidden="true" focusable="false"></svg>`+
-    `</button>`+
-    `<div class="np-body">`+weekBlock+rows+`</div>`;
-  panel.classList.toggle('np-open', _npOpen);
-  document.body.classList.toggle('np-expanded', _npOpen);
-  document.body.classList.add('notes-open');
+  if(panel){ panel.innerHTML=''; panel.hidden=true; }
+  document.body.classList.remove('notes-open','np-expanded');
+  return;
 }
-
 /* ============================================================
    CACHE SESSION (sessionStorage — se vide au reload)
    ============================================================ */
@@ -6252,15 +6253,16 @@ function renderFavChips(){
   const container=document.getElementById('fav-chips');
   const favs=loadFavorites();
   const defIdx=getDefaultIdx();
+  queueMicrotask(()=>{ if(typeof majBoutonFavCal==='function') majBoutonFavCal(); });
   if(favs.length===0){
     container.innerHTML=`<span style="font-size:11.5px;color:var(--muted);font-style:italic;line-height:2;">Aucun favori — épingle ta sélection !</span>`;
     return;
   }
   container.innerHTML=favs.map((f,i)=>`
-    <span class="fav-chip${i===defIdx?' is-default':''}" onclick="loadFav(${i})" title="${i===defIdx?'Par défaut — chargé au démarrage':'Cliquer pour charger'}">
-      <span class="fav-star" onclick="event.stopPropagation();toggleDefault(${i})" title="${i===defIdx?'Retirer le par défaut':'Définir comme par défaut'}">${i===defIdx?'⭐':'☆'}</span>
-      ${f.name}
-      <span class="fav-del" onclick="event.stopPropagation();deleteFav(${i})" title="Supprimer">×</span>
+    <span class="fav-chip${i===defIdx?' is-default':''}" role="button" tabindex="0" onclick="loadFav(${i})" title="${i===defIdx?'Par défaut — chargé au démarrage':'Cliquer pour charger'}">
+      <span class="fav-star" role="button" tabindex="0" aria-label="${i===defIdx?'Retirer le par défaut':'Définir comme par défaut'}" onclick="event.stopPropagation();toggleDefault(${i})" title="${i===defIdx?'Retirer le par défaut':'Définir comme par défaut'}">${i===defIdx?'●':'○'}</span>
+      ${escapeHtml(f.emoji||'📌')} ${escapeHtml(f.name)}
+      <span class="fav-del" role="button" tabindex="0" aria-label="Supprimer ${escapeHtml(f.name)}" onclick="event.stopPropagation();deleteFav(${i})" title="Supprimer">×</span>
     </span>
   `).join('');
 }
@@ -6310,8 +6312,9 @@ function closeModal(){document.getElementById('modal-overlay').classList.remove(
 function savePin(){
   const name=document.getElementById('fav-name-input').value.trim();
   if(!name) return;
+  if(typeof soundPin==='function') soundPin();
   const favs=loadFavorites();
-  favs.push({name,ids:[...selected]});
+  favs.push({name,ids:[...selected],emoji:(typeof _selectedFavEmoji!=='undefined'&&_selectedFavEmoji)||'⭐'});
   saveFavorites(favs);
   renderFavChips();
   closeModal();
@@ -6388,6 +6391,7 @@ const PROFIL_PREFIXE = 'RT1-';
 // Liste blanche : on n'exporte et surtout on ne réimporte que ces clés.
 // Un code reçu ne doit jamais pouvoir écrire n'importe où dans localStorage.
 const PROFIL_CLES = [
+  'ade-taches',
   'ade-dark','ade-color','ade-custom-hex','ade-eco','ade-sound',
   'ade-exam-auto','ade-cursor-anim','ade-robot-anim','ade-cursor-rot-threshold',
   'ade-shake-today','ade-hist-disabled','ade-active-tab',
@@ -7863,7 +7867,6 @@ document.getElementById('btn-voir').addEventListener('click', ()=>{
    FRESHNESS INDICATOR
    ============================================================ */
 let _lastFetchTime = null;
-let _fetchedFromCache = false;
 
 function updateFreshness(){
   const badge=document.getElementById('freshness-badge');
@@ -7879,13 +7882,6 @@ function updateFreshness(){
 }
 setInterval(updateFreshness,60000);
 
-// Also track cache hits
-const _origLoadCache = loadSessionCache;
-loadSessionCache = function(ids){
-  const res = _origLoadCache(ids);
-  if(res) _fetchedFromCache = true;
-  return res;
-};
 
 /* ============================================================
    KEYBOARD SHORTCUTS
@@ -8149,38 +8145,6 @@ function selectFavEmoji(btn){
   _selectedFavEmoji=btn.dataset.emoji;
 }
 
-// Patch savePin to include emoji
-const _origSavePin=savePin;
-savePin = function(){
-  const name=document.getElementById('fav-name-input').value.trim();
-  if(!name) return;
-  const favs=loadFavorites();
-  favs.push({name,ids:[...selected],emoji:_selectedFavEmoji||'⭐'});
-  saveFavorites(favs);
-  renderFavChips();
-  closeModal();
-  showToast(`📌 Favori "${name}" épinglé !`);
-};
-
-// Patch renderFavChips to show emoji
-const _origRenderFavChips=renderFavChips;
-renderFavChips = function(){
-  const container=document.getElementById('fav-chips');
-  const favs=loadFavorites();
-  const defIdx=getDefaultIdx();
-  if(favs.length===0){
-    container.innerHTML=`<span style="font-size:11.5px;color:var(--muted);font-style:italic;line-height:2;">Aucun favori — épingle ta sélection !</span>`;
-    return;
-  }
-  container.innerHTML=favs.map((f,i)=>`
-    <span class="fav-chip${i===defIdx?' is-default':''}" onclick="loadFav(${i})" title="${i===defIdx?'Par défaut — chargé au démarrage':'Cliquer pour charger'}">
-      <span class="fav-star" onclick="event.stopPropagation();toggleDefault(${i})" title="${i===defIdx?'Retirer le par défaut':'Définir comme par défaut'}">${i===defIdx?'●':'○'}</span>
-      ${f.emoji||'📌'} ${f.name}
-      <span class="fav-del" onclick="event.stopPropagation();deleteFav(${i})" title="Supprimer">×</span>
-    </span>
-  `).join('');
-};
-renderFavChips();
 
 /* ============================================================
    DATE PICKER — WEEK INTENSITY COLORING
@@ -8275,8 +8239,32 @@ openStatsModal = function(){
   // Le service worker vit dans sw.js, à côté de cette page.
   if(!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
   const dejaPret=!!navigator.serviceWorker.controller;
+
+  // Mise à jour : le nouveau service worker attend au lieu de prendre la main
+  // d'un coup. On propose « Recharger » ; au clic, il s'active et la page se
+  // recharge une seule fois.
+  let recharge=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!dejaPret || recharge) return;
+    recharge=true; location.reload();
+  });
+  const proposer=sw=>{
+    if(!sw || !navigator.serviceWorker.controller) return;
+    afficherBandeauMaj(()=>sw.postMessage({type:'SKIP_WAITING'}));
+  };
+  const surveiller=reg=>{
+    if(reg.waiting) proposer(reg.waiting);
+    reg.addEventListener('updatefound',()=>{
+      const n=reg.installing;
+      n?.addEventListener('statechange',()=>{ if(n.state==='installed') proposer(n); });
+    });
+    // Une appli installée reste ouverte des jours : vérifier de temps en temps
+    setInterval(()=>{ if(navigator.onLine) reg.update().catch(()=>{}); }, 60*60*1000);
+  };
+
   navigator.serviceWorker.register('sw.js',{scope:'./'})
     .then(reg=>{
+      surveiller(reg);
       // Premier passage : dire une fois que l'appli marchera sans réseau
       if(dejaPret) return;
       const sw=reg.installing||reg.waiting||reg.active;
@@ -8289,6 +8277,100 @@ openStatsModal = function(){
       else sw?.addEventListener('statechange',()=>{ if(sw.state==='activated') annoncer(); });
     })
     .catch(e=>console.warn('Service worker non enregistré',e));
+})();
+
+/* ============================================================
+   CLAVIER ET FOCUS
+   - Entrée / Espace activent les éléments role="button|checkbox" qui ne
+     sont pas de vrais <button> (cours de la grille, cartes de sélection).
+   - Fenêtres : à l'ouverture, le focus entre dedans ; Tab tourne en
+     boucle à l'intérieur ; à la fermeture, il revient sur l'élément qui
+     l'a ouverte.
+   ============================================================ */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter' && e.key!==' ') return;
+  const el=e.target;
+  if(!(el instanceof HTMLElement) || /^(BUTTON|A|INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable) return;
+  if(!el.matches('[role="button"],[role="checkbox"]')) return;
+  e.preventDefault(); el.click();
+});
+
+const FOCUS_FENETRES='[id$="-overlay"],section.fl,.pal-voile';
+const FOCUSABLES='button:not([disabled]),[href],input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
+function fenetreOuverte(){
+  const liste=[...document.querySelectorAll(FOCUS_FENETRES)].filter(el=>{
+    if(!el.isConnected || el.hidden) return false;
+    const cs=getComputedStyle(el);
+    return cs.display!=='none' && cs.visibility!=='hidden' && cs.pointerEvents!=='none' && parseFloat(cs.opacity)>0.05
+        && el.getClientRects().length>0;
+  });
+  return liste[liste.length-1]||null;   // la dernière ouverte est au-dessus
+}
+function focusablesDe(f){ return [...f.querySelectorAll(FOCUSABLES)].filter(x=>x.offsetParent!==null || x===document.activeElement); }
+let _focusAvant=null, _fenetreActive=null;
+document.addEventListener('focusin',e=>{ if(!fenetreOuverte()) _focusAvant=e.target; },true);
+function verifierFenetre(){
+  const f=fenetreOuverte();
+  if(f && f!==_fenetreActive){
+    _fenetreActive=f;
+    if(!f.getAttribute('role')) f.setAttribute('role','dialog');
+    f.setAttribute('aria-modal','true');
+    if(!f.contains(document.activeElement)){
+      const cible=f.querySelector('[autofocus]')||focusablesDe(f)[0];
+      if(cible) cible.focus({preventScroll:true});
+      else { f.tabIndex=-1; f.focus({preventScroll:true}); }
+    }
+  } else if(!f && _fenetreActive){
+    _fenetreActive=null;
+    if(_focusAvant?.isConnected && (document.activeElement===document.body || !document.activeElement)) _focusAvant.focus({preventScroll:true});
+  }
+}
+['click','keyup','transitionend','animationend'].forEach(t=>document.addEventListener(t,()=>setTimeout(verifierFenetre,60),true));
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Tab') return;
+  const f=fenetreOuverte(); if(!f) return;
+  const liste=focusablesDe(f); if(!liste.length){ e.preventDefault(); return; }
+  const premier=liste[0], dernier=liste[liste.length-1];
+  if(!f.contains(document.activeElement)){ e.preventDefault(); premier.focus(); }
+  else if(e.shiftKey && document.activeElement===premier){ e.preventDefault(); dernier.focus(); }
+  else if(!e.shiftKey && document.activeElement===dernier){ e.preventDefault(); premier.focus(); }
+});
+
+function afficherBandeauMaj(appliquer){
+  if(document.getElementById('bandeau-maj')) return;
+  const b=document.createElement('div');
+  b.id='bandeau-maj'; b.className='bandeau-maj'; b.setAttribute('role','status');
+  b.innerHTML=`<span>Nouvelle version disponible</span>
+    <button type="button" class="bm-ok">Recharger</button>
+    <button type="button" class="bm-non" aria-label="Plus tard">✕</button>`;
+  b.querySelector('.bm-ok').onclick=()=>{ b.querySelector('.bm-ok').disabled=true; appliquer(); };
+  b.querySelector('.bm-non').onclick=()=>b.remove();
+  document.body.appendChild(b);
+}
+
+/* Demander au navigateur de ne pas effacer les données de l'appli (notes,
+   tâches, EDT gardés). Chrome et Safari décident seuls, sans fenêtre ;
+   Firefox affiche une demande, donc on attend que l'utilisateur ait
+   quelque chose à perdre : un EDT gardé, une note ou une tâche. */
+async function demanderStockagePersistant(){
+  try{
+    if(!navigator.storage?.persist) return;
+    if(await navigator.storage.persisted()) return;
+    await navigator.storage.persist();
+  }catch(e){}
+}
+(function(){
+  const aDesDonnees=()=>{
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(/^ade-(evnote|evtasks|weeknote|weektasks|favorites)/.test(k) || k==='ade-hors-ligne-index') return true;
+      }
+    }catch(e){}
+    return false;
+  };
+  // Hors Firefox, aucune fenêtre : on peut demander tout de suite
+  if(!/firefox/i.test(navigator.userAgent) || aDesDonnees()) setTimeout(demanderStockagePersistant, 3000);
 })();
 
 /* ============================================================
@@ -8388,12 +8470,6 @@ loadFav = async function(i){
   return _origLoadFav(i);
 };
 
-// Patch savePin to add sound
-const _origSavePinSound = savePin;
-savePin = function(){
-  soundPin();
-  _origSavePinSound();
-};
 
 // Now-line crossing detection
 let _lastNowLineSide = {}; // eventKey -> 'before'|'during'|'after'
@@ -8476,7 +8552,6 @@ function applyCustomHex(raw){
   applyCustomColorInline(hex);
   // Save custom hex; keep ade-color so dark/light mode theme palette is preserved
   localStorage.setItem('ade-custom-hex', hex);
-  updateFavicon();
   showToast('🎨 Couleur personnalisée appliquée !');
   soundPin();
 }
@@ -9421,6 +9496,12 @@ const pxBarre = rows => Array.from({length:16},(_,y)=>{
 PX_ICONS.belloff = pxBarre(PX_ICONS.bell);
 PX_ICONS.nope    = pxBarre(PX_ICONS.ring);
 PX_ICONS.chevU   = [...PX_ICONS.chevD].concat(Array(16-PX_ICONS.chevD.length).fill('')).reverse();
+// Chevrons gauche/droite : transposée du chevron bas
+{ const g=[...PX_ICONS.chevD].concat(Array(16-PX_ICONS.chevD.length).fill('')).map(r=>r.padEnd(16,'.'));
+  PX_ICONS.chevR = Array.from({length:16},(_,y)=>Array.from({length:16},(_,x)=>g[x][y]).join(''));
+  PX_ICONS.chevL = PX_ICONS.chevR.map(r=>r.split('').reverse().join('')); }
+// Liste à cocher (onglet « À faire »)
+PX_ICONS.todo = ['','.###............','.#.#..########..','.###............','','.###............','.#.#..######....','.###............','','.###............','.#.#..########..','.###............'];
 
 /* Emoji → icône (+ classes de teinte). Les flèches et puces typographiques
    (→ ← ● ▲) restent du texte. */
@@ -9543,19 +9624,33 @@ function pxCascade(evts){
       .forEach((ev,i)=>{ ev.style.setProperty('--px-i',Math.min(i,14)); ev.classList.add('px-in'); });
 }
 
-new MutationObserver(muts=>{
+// L'observateur couvre tout le body (les gabarits JS posent des emoji un peu
+// partout), mais il fait le moins de travail possible : les horloges qui
+// changent chaque seconde sont ignorées, un nœud texte sans emoji est
+// rejeté par un seul test, et le traitement est regroupé une fois par image.
+const PX_BRUIT='#cal-clock,#cal-date,.tb-horloge,#clock-bar,.ev-live-badge,.ev-progress,#freshness-text,.nc-compte,.cd-chip';
+let _pxFile=[], _pxPrevu=false;
+function pxTraiter(){
+  _pxPrevu=false;
+  const file=_pxFile; _pxFile=[];
   const evts=[];
-  for(const m of muts){
-    if(m.type==='characterData'){ pxRemplacer(m.target); continue; }
-    m.addedNodes.forEach(n=>{
-      pxRemplacer(n);
-      if(n.nodeType===1){
-        if(n.classList.contains('cal-event')) evts.push(n);
-        else n.querySelectorAll?.('.cal-event').forEach(e=>evts.push(e));
-      }
-    });
+  for(const n of file){
+    if(!n.isConnected) continue;
+    if(n.nodeType===3){ PX_RE.lastIndex=0; if(PX_RE.test(n.data)) pxRemplacer(n.parentNode||n); continue; }
+    pxRemplacer(n);
+    if(n.classList.contains('cal-event')) evts.push(n);
+    else if(n.querySelector?.('.cal-event')) n.querySelectorAll('.cal-event').forEach(e=>evts.push(e));
   }
   if(evts.length) pxCascade(evts);
+}
+new MutationObserver(muts=>{
+  for(const m of muts){
+    const cible=m.target.nodeType===1?m.target:m.target.parentElement;
+    if(cible?.closest?.(PX_BRUIT)) continue;
+    if(m.type==='characterData'){ _pxFile.push(m.target); continue; }
+    m.addedNodes.forEach(n=>{ if(n.nodeType===1||n.nodeType===3) _pxFile.push(n); });
+  }
+  if(_pxFile.length && !_pxPrevu){ _pxPrevu=true; requestAnimationFrame(pxTraiter); }
 }).observe(document.body,{childList:true,subtree:true,characterData:true});
 pxRemplacer(document.body);
 addEventListener('resize',()=>document.querySelectorAll('svg.px[data-px-pret]')
@@ -9630,6 +9725,7 @@ function palActions(){
     edt && {lib:'Imprimer la semaine', faire:()=>printCalendar()},
     edt && {lib:'Copier le lien de cette vue', faire:()=>partagerVue()},
     edt && {lib:hlEstGarde([...selected])?'Ne plus garder cet EDT hors ligne':'Garder cet EDT hors ligne', faire:()=>basculerHorsLigne()},
+    {lib:'À faire : mes tâches', faire:()=>ouvrirAFaire()},
     {lib:sombre?'Passer en thème clair':'Passer en thème sombre', faire:()=>basculerThemeAnime(!sombre)},
     {lib:'Paramètres', faire:()=>openParams()},
     peutInstaller() && {lib:'Installer l\'appli', faire:()=>installerAppli()},
@@ -9849,20 +9945,16 @@ function majResumeSelection(){
   const el=document.getElementById('sel-resume-noms');
   if(el) el.textContent=[...selected].map(labelForId).join(' · ')||'—';
 }
-// ≥ 1100 px, la sélection vit dans la barre latérale : rien à replier
+// Sur PC aussi : une fois l'EDT chargé, la liste de cartes se réduit en
+// une ligne « Affiché : … · Modifier » dans la barre latérale.
 const LARGE=matchMedia('(min-width:1100px)');
 function replierSelection(oui){
   const g=document.querySelector('.page-inner .glass');
   if(!g) return;
   majResumeSelection();
-  if(LARGE.matches) oui=false;
   g.classList.toggle('repli',!!oui);
   if(!oui && !LARGE.matches) g.scrollIntoView({behavior:pxCalme()?'auto':'smooth',block:'start'});
 }
-LARGE.addEventListener('change',()=>{
-  if(LARGE.matches) document.querySelector('.glass.repli')?.classList.remove('repli');
-  else if(document.body.classList.contains('edt-on')) replierSelection(true);
-});
 (function suivreAffichageEdt(){
   const corps=document.getElementById('cal-body'), cadre=document.getElementById('cal-wrapper');
   if(!corps||!cadre) return;
@@ -10103,9 +10195,33 @@ function majBoutonHorsLigne(){
   const ids=[...selected], garde=ids.length && hlEstGarde(ids);
   btn.hidden=!ids.length;
   btn.setAttribute('aria-pressed', garde?'true':'false');
-  btn.querySelector('.hl-garder-txt').textContent = garde ? 'Gardé hors ligne' : 'Garder hors ligne';
+  const court = matchMedia('(max-width:700px)').matches;
+  btn.querySelector('.hl-garder-txt').textContent = garde ? (court?'Gardé':'Gardé hors ligne') : (court?'Garder':'Garder hors ligne');
   btn.title = garde ? 'Gardé sur l\'appareil · cliquer pour ne plus le garder'
                     : 'Garder cet emploi du temps sur l\'appareil, pour le consulter sans réseau';
+  majBoutonFavCal();
+}
+
+/* Favori depuis l'en-tête de l'EDT : sur téléphone, le bouton « Épingler »
+   du panneau de sélection est replié hors de vue. */
+function favIndexSelection(){
+  const cle=[...selected].sort().join(',');
+  return loadFavorites().findIndex(f=>(f.ids||[]).slice().sort().join(',')===cle);
+}
+function majBoutonFavCal(){
+  const btn=document.getElementById('btn-fav-cal');
+  if(!btn) return;
+  btn.hidden=!selected.size;
+  const i=selected.size?favIndexSelection():-1;
+  btn.setAttribute('aria-pressed', i>=0?'true':'false');
+  btn.querySelector('.hl-garder-txt').textContent = i>=0 ? 'En favori' : 'Favori';
+  btn.title = i>=0 ? 'Dans les favoris · cliquer pour le retirer' : 'Épingler cette sélection dans les favoris';
+}
+function basculerFavoriCal(){
+  if(!selected.size) return;
+  const i=favIndexSelection();
+  if(i>=0) deleteFav(i); else openPinModal();
+  majBoutonFavCal();
 }
 
 function rendreListeHorsLigne(){
@@ -10139,7 +10255,7 @@ async function hlRetirer(cle){
 // La liste se met à jour à l'ouverture des paramètres, le bouton à chaque rendu
 if(typeof openParams==='function'){
   const ouvrir=openParams;
-  openParams=function(...a){ const r=ouvrir.apply(this,a); rendreListeHorsLigne(); return r; };
+  openParams=function(...a){ const r=ouvrir.apply(this,a); rendreListeHorsLigne(); if(typeof pushRendre==='function') pushRendre(); return r; };
 }
 if(typeof renderCalendar==='function'){
   const rendu2=renderCalendar;
@@ -10200,6 +10316,7 @@ function flRecaler(){
   // offset* et pas getBoundingClientRect : l'animation d'entrée réduit la fiche à 96 %
   const el=_fl.el, h=el.offsetHeight, w=el.offsetWidth;
   if(el.offsetTop+h>innerHeight-12) el.style.top=Math.max(12, innerHeight-12-h)+'px';
+  if(el.offsetTop<12) el.style.top='12px';
   if(el.offsetLeft+w>innerWidth-12) el.style.left=Math.max(12, innerWidth-12-w)+'px';
 }
 function flMesurer(){
@@ -10305,11 +10422,24 @@ const JOURS_LONGS=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
 const MOIS_C=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 function dureeTexte(min){ const h=Math.floor(min/60), m=min%60; return h?`${h} h${m?' '+String(m).padStart(2,'0'):''}`:`${m} min`; }
 
-showEvPopup=function(evt, encodedData){
+function showEvPopup(evt, encodedData){
   evt?.stopPropagation?.();
   const data=JSON.parse(decodeURIComponent(encodedData));
+  const html=fcHtml(data, encodedData);
+  const b=evt?.currentTarget?.getBoundingClientRect?.() || evt?.target?.getBoundingClientRect?.();
+  const ctx={data, enc:encodedData, noteTouchee:false};
+  const el=flOuvrir(html,{label:fcTitre(data), x:evt?.clientX ?? (b?b.right:innerWidth/2), y:evt?.clientY ?? (b?b.top:120),
+    onClose:()=>{ if(ctx.noteTouchee && document.getElementById('cal-body')?.style.display==='block') renderCalendar(); }});
+  el._fc=ctx;
+  fcLier(el, ctx);
+  requestAnimationFrame(()=>{ if(_fl?.mobile) flMesurer(); else flRecaler(); });
+};
+function fcTitre(data){
+  const m=(data.title||'').match(/^((?:R|SAE|S|M)\d{2,4}[A-Z]?\w*)\s+(.+)$/i);
+  return ((m?m[2]:data.title||'Sans titre').replace(/\s*[-–_]?\s*NE\s*$/i,'').replace(/\s*[-–]?\s*\b(CM|TD|TP)\s*$/i,'').replace(/\s*[-–_]+\s*$/,'').trim()) || data.title;
+}
+function fcHtml(data, encodedData){
   _currentNoteKey=makeNoteKey(data.title,data.start||'');
-  _currentTaskKey=makeTaskKey(data.title,data.start||'');
   const debut=new Date(data.start), fin=new Date(data.end), now=new Date();
   const ev={title:data.title, desc:data.desc||'', location:data.loc||'', start:debut, end:fin};
   const exam=isExamEvent(ev), ne=contientNE(data.title)||contientNE(data.desc||'');
@@ -10318,8 +10448,7 @@ showEvPopup=function(evt, encodedData){
   // Code module (R303, SAE304…) en étiquette, le reste en titre
   const m=(data.title||'').match(/^((?:R|SAE|S|M)\d{2,4}[A-Z]?\w*)\s+(.+)$/i);
   // Le type (TD, CM…) et le NE final sont déjà en étiquettes : pas en double dans le titre
-  const code=m?m[1]:'', titre=(m?m[2]:data.title||'Sans titre')
-    .replace(/\s*[-–_]?\s*NE\s*$/i,'').replace(/\s+(CM|TD|TP)\s*$/i,'').trim() || data.title;
+  const code=m?m[1]:'', titre=fcTitre(data);
   const minutes=Math.round((fin-debut)/60000);
   let rel='';
   if(debut<=now && now<fin) rel=`<span class="fc-rel encours">en cours · fin dans ${dureeTexte(Math.round((fin-now)/60000))}</span>`;
@@ -10348,60 +10477,503 @@ showEvPopup=function(evt, encodedData){
       ${exam?`<div class="fc-ligne"><svg class="px" data-px="pin" aria-hidden="true"></svg><span class="fc-ligne-val">${epingle?'Examen épinglé':'Épingler pour le compte à rebours'}</span>
         <button class="btn-sm fc-action" onclick="togglePinFromModal('${enc}');showEvPopupDepuis('${encodedData}')">${epingle?'Retirer':'Épingler'}</button></div>`:''}
     </div>
-    <section class="fc-section">
-      <div class="fc-sec-tete"><span class="fc-sec-titre">Tâches</span><span class="fc-sec-compte" id="fc-compte"></span></div>
+    <section class="fc-section" aria-label="Tâches">
+      <div class="fc-sec-tete"><span class="fc-sec-titre">À faire</span><span class="fc-sec-compte" id="fc-compte"></span>
+        <button class="fc-lien" onclick="ouvrirAFaire()">Tout voir<svg class="px" data-px="chevR" aria-hidden="true"></svg></button></div>
       <div id="ev-checklist"></div>
       <div class="fc-ajout">
-        <input type="text" id="ev-add-input" placeholder="Ajouter une tâche" maxlength="120" enterkeyhint="done" autocomplete="off">
-        <button class="btn-main" onclick="evAddTask()" aria-label="Ajouter la tâche">+</button>
+        <input type="text" id="ev-add-input" placeholder="Nouvelle tâche…" maxlength="140" enterkeyhint="send" autocomplete="off" aria-label="Nouvelle tâche">
+        <button class="btn-main" onclick="fcAjouter()" aria-label="Ajouter la tâche">+</button>
       </div>
+      <div class="fc-echeance" id="fc-echeance" role="group" aria-label="Échéance de la nouvelle tâche"></div>
     </section>
-    <section class="fc-section">
-      <div class="fc-sec-tete"><span class="fc-sec-titre">Note</span></div>
-      <textarea class="fc-note" id="ev-note-textarea" placeholder="Une remarque sur ce cours…">${escapeHtml(localStorage.getItem(_currentNoteKey)||'')}</textarea>
-      <div class="fc-note-etat" id="fc-note-etat"></div>
-    </section>
+    <button type="button" class="fc-note-ligne" onclick="fcEditerNote()">
+      <svg class="px" data-px="note" aria-hidden="true"></svg>
+      <span class="fc-note-txt"><span class="fc-note-lib">Note</span><span class="fc-note-apercu" id="fc-note-apercu"></span></span>
+      <svg class="px" data-px="chevR" aria-hidden="true"></svg>
+    </button>
   </article>`;
-  const b=evt?.currentTarget?.getBoundingClientRect?.() || evt?.target?.getBoundingClientRect?.();
-  let noteTouchee=false;
-  const el=flOuvrir(html,{label:titre, x:evt?.clientX ?? (b?b.right:innerWidth/2), y:evt?.clientY ?? (b?b.top:120),
-    onClose:()=>{ if(noteTouchee && document.getElementById('cal-body')?.style.display==='block') renderCalendar(); }});
-  renderEvChecklist(evGetTasks());
-  // Note : enregistrement automatique, pas de bouton
-  const ta=el.querySelector('#ev-note-textarea'), etat=el.querySelector('#fc-note-etat');
+  return html;
+}
+
+/* Fiche : liaison des événements. Appelée à l'ouverture et au retour de
+   l'éditeur de note (le contenu est remplacé, pas la feuille). */
+function fcLier(el, ctx){
+  const d=ctx.data, debut=new Date(d.start);
+  ctx.occ=taOcc(d.title, d.start);
+  ctx.mat=subjectKey(d.title);
+  ctx.suivant=taProchainCours(ctx.mat, debut);
+  // Pronote : un travail se donne « pour le prochain cours ». Avant le cours,
+  // on prépare plutôt ce cours-ci.
+  if(!ctx.cible) ctx.cible = (new Date()>=debut && ctx.suivant) ? 'suivant' : 'ce';
+  fcRendreEcheance(el, ctx);
+  fcRendreTaches(el, ctx);
+  const note=(localStorage.getItem(makeNoteKey(d.title,d.start||''))||'').trim();
+  const ap=el.querySelector('#fc-note-apercu');
+  ap.textContent = note ? note.split('\n').slice(0,2).join(' · ') : 'Ajouter une note';
+  ap.classList.toggle('vide', !note);
+  const inp=el.querySelector('#ev-add-input');
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); fcAjouter(); } });
+}
+function fcRendreEcheance(el, ctx){
+  const box=el.querySelector('#fc-echeance'); if(!box) return;
+  const s=ctx.suivant;
+  box.innerHTML=
+    `<button type="button" class="fc-chip" aria-pressed="${ctx.cible==='ce'}" data-c="ce">Pour ce cours</button>`+
+    (s?`<button type="button" class="fc-chip" aria-pressed="${ctx.cible==='suivant'}" data-c="suivant">Prochain cours · ${taJour(s.start)}</button>`:'');
+  box.querySelectorAll('.fc-chip').forEach(b=>b.onclick=()=>{ ctx.cible=b.dataset.c; fcRendreEcheance(el,ctx); el.querySelector('#ev-add-input')?.focus(); });
+}
+function fcRendreTaches(el, ctx){
+  const box=el.querySelector('#ev-checklist'); if(!box) return;
+  const toutes=taLire();
+  const ici=toutes.filter(t=>taPourCours(t, ctx.occ, ctx.mat, new Date(ctx.data.start)));
+  const apres=ctx.suivant ? toutes.filter(t=>!t.fait && taPourCours(t, taOcc(ctx.suivant.title,ctx.suivant.start), ctx.mat, ctx.suivant.start)) : [];
+  const c=el.querySelector('#fc-compte');
+  if(c) c.textContent = ici.length ? `${ici.filter(t=>t.fait).length}/${ici.length}` : '';
+  let h = ici.length ? ici.map(taItemHtml).join('') : `<div class="fc-vide">Rien pour ce cours.</div>`;
+  if(apres.length) h += `<div class="ta-sous">Pour le prochain cours · ${taJour(ctx.suivant.start)}</div>` + apres.map(taItemHtml).join('');
+  box.innerHTML=h;
+}
+function fcAjouter(){
+  const el=_fl?.el, ctx=el?._fc; if(!ctx) return;
+  const inp=el.querySelector('#ev-add-input'); const brut=inp.value.trim(); if(!brut) return;
+  const p=taAnalyser(brut, {mat:ctx.mat});
+  let due=p.due, occ=p.occ, jourSeul=p.jourSeul;
+  if(!p.dateDonnee){
+    const cible = ctx.cible==='suivant' && ctx.suivant ? ctx.suivant : {title:ctx.data.title, start:new Date(ctx.data.start)};
+    due=new Date(cible.start).toISOString(); occ=taOcc(cible.title, cible.start); jourSeul=false;
+  }
+  taAjouter({t:p.texte, mat:p.mat||ctx.mat, due, occ, jourSeul});
+  inp.value=''; inp.focus();                // Entrée : on enchaîne la suivante
+  fcRendreTaches(el, ctx);
+  if(typeof haptic==='function') haptic([6]);
+  if(!p.dateDonnee && ctx.cible==='suivant') showToast(`Ajoutée pour le cours du ${taJour(ctx.suivant.start)}`);
+}
+
+/* Éditeur de note : il prend toute la feuille, le clavier a la place. */
+function fcEditerNote(){
+  const el=_fl?.el, ctx=el?._fc; if(!ctx) return;
+  const d=ctx.data, cle=makeNoteKey(d.title,d.start||'');
+  const corps=el.querySelector('.fl-corps');
+  corps.innerHTML=`<article class="fc fc-editeur" style="--evh:${subjectHue(d.title)}">
+    <div class="fc-haut">
+      <button class="fc-retour" type="button"><svg class="px" data-px="chevL" aria-hidden="true"></svg>Cours</button>
+      <span class="fc-note-etat" id="fc-note-etat" aria-live="polite"></span>
+      <button class="fc-fermer" onclick="flFermer()" aria-label="Fermer"><svg class="px" data-px="close" aria-hidden="true"></svg></button>
+    </div>
+    <div class="fc-editeur-sujet">${escapeHtml(fcTitre(d))} · ${taJour(new Date(d.start))} ${fmtTime(new Date(d.start))}</div>
+    <textarea class="fc-note grande" id="ev-note-textarea" placeholder="Ce qu'il faut retenir, apporter, réviser…" aria-label="Note du cours">${escapeHtml(localStorage.getItem(cle)||'')}</textarea>
+  </article>`;
+  const ta=corps.querySelector('textarea'), etat=corps.querySelector('#fc-note-etat');
   let minuterie=null;
-  ta.addEventListener('input',()=>{
-    noteTouchee=true; etat.textContent='…';
+  const enregistrer=()=>{
     clearTimeout(minuterie);
-    minuterie=setTimeout(()=>{
-      const v=ta.value.trim();
-      if(v) localStorage.setItem(_currentNoteKey,v); else localStorage.removeItem(_currentNoteKey);
-      etat.textContent=v?'Enregistrée':'Note vide';
-      if(typeof updateNotesPanel==='function') updateNotesPanel();
-    },400);
-  });
-  el.querySelector('#ev-add-input').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); evAddTask(); } });
-  requestAnimationFrame(()=>{ if(_fl?.mobile) flMesurer(); else flRecaler(); });
-};
+    const v=ta.value.trim();
+    if(v) localStorage.setItem(cle,v); else localStorage.removeItem(cle);
+    etat.textContent=v?'Enregistrée':'';
+    if(typeof updateNotesPanel==='function') updateNotesPanel();
+  };
+  ta.addEventListener('input',()=>{ ctx.noteTouchee=true; etat.textContent='…'; clearTimeout(minuterie); minuterie=setTimeout(enregistrer,400); });
+  corps.querySelector('.fc-retour').onclick=()=>{ enregistrer(); corps.innerHTML=fcHtml(d, ctx.enc); fcLier(el, ctx); corps.scrollTop=0; };
+  flAller('grand',true);
+  corps.scrollTop=0;
+  setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 60);
+}
 // Rouvrir la fiche (après épinglage) au même endroit
 function showEvPopupDepuis(enc){ showEvPopup(null, enc); }
+function closePopupOnce(){ flFermer(); }
 
-// Liste des tâches au format fiche (les fonctions evAdd/Toggle/Delete l'appellent)
-renderEvChecklist=function(tasks){
-  const el=document.getElementById('ev-checklist');
-  if(!el) return;
-  const c=document.getElementById('fc-compte');
-  if(c) c.textContent=tasks.length?`${tasks.filter(t=>t.done).length}/${tasks.length}`:'';
-  if(!tasks.length){ el.innerHTML='<div class="fc-vide">Rien à faire pour ce cours.</div>'; return; }
-  el.innerHTML=tasks.map((t,i)=>`
-    <div class="fc-tache${t.done?' fait':''}">
-      <input type="checkbox" id="evc-${i}" ${t.done?'checked':''} onchange="evToggleTask(${i})">
-      <label for="evc-${i}">${escapeHtml(t.text)}</label>
-      <button class="fc-tache-suppr" onclick="evDeleteTask(${i})" aria-label="Supprimer la tâche"><svg class="px" data-px="trash" aria-hidden="true"></svg></button>
-    </div>`).join('');
-};
-// L'ancienne popup flottante n'existe plus
-closePopupOnce=function(){ flFermer(); };
+/* ============================================================
+   À FAIRE — tâches liées aux matières et aux cours
+   Modèle repris de Pronote / MyStudyLife : une tâche est un objet à part,
+   avec une matière et une échéance (un cours précis ou un jour), rangée
+   dans une seule liste triée par date. La fiche d'un cours n'en montre
+   que ce qui la concerne ; la grille n'affiche qu'un compteur.
+   { id, t, fait, mat, due (ISO|null), occ ("titre|début"|null), jourSeul, cree }
+   ============================================================ */
+const TA_CLE='ade-taches';
+function taLire(){ try{ return JSON.parse(localStorage.getItem(TA_CLE)||'[]'); }catch(e){ return []; } }
+function taEcrire(liste){
+  try{ localStorage.setItem(TA_CLE, JSON.stringify(liste)); }catch(e){ showToast('Stockage plein : tâche non enregistrée'); }
+  _taIndex=null;
+  taMajCompteurs();
+  const d=document.getElementById('ta-dock');
+  if(d && !d.hidden) setTimeout(()=>taRendreListe(d), 0);
+  if(typeof updateNotesPanel==='function') updateNotesPanel();
+}
+function taOcc(title,start){ return (title||'')+'|'+(start instanceof Date?start.toISOString():new Date(start).toISOString()); }
+function taJour(d){ d=new Date(d); return `${JOURS_LONGS[d.getDay()]} ${d.getDate()}${d.getMonth()!==new Date().getMonth()?' '+MOIS_C[d.getMonth()]:''}`; }
+function taTousCours(){
+  const vus=new Set(), out=[];
+  Object.values(allEventsById||{}).forEach(l=>(l||[]).forEach(ev=>{
+    const k=taOcc(ev.title,ev.start); if(vus.has(k)) return; vus.add(k); out.push(ev);
+  }));
+  return out.sort((a,b)=>a.start-b.start);
+}
+function taProchainCours(mat, apres){ apres=new Date(apres); return taTousCours().find(ev=>ev.start>apres && subjectKey(ev.title)===mat) || null; }
+function taPourCours(t, occ, mat, debut){
+  if(t.occ) return t.occ===occ;
+  // Tâche datée d'un jour (saisie « jeudi ») : elle va au cours de la matière ce jour-là
+  return !!(t.due && t.mat===mat && memeJourParis(new Date(t.due), new Date(debut)));
+}
+// Index occurrence → tâches ouvertes, pour les compteurs de la grille
+let _taIndex=null;
+function taOuvertesPour(title, start){
+  if(!_taIndex){
+    _taIndex=new Map();
+    for(const t of taLire()){ if(t.fait || !t.occ) continue; _taIndex.set(t.occ,(_taIndex.get(t.occ)||0)+1); }
+  }
+  return _taIndex.get(taOcc(title,start))||0;
+}
+function taAjouter(o){
+  const l=taLire();
+  l.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), t:o.t, fait:false, mat:o.mat||null,
+          due:o.due||null, occ:o.occ||null, jourSeul:!!o.jourSeul, cree:new Date().toISOString()});
+  taEcrire(l);
+  if(document.getElementById('cal-body')?.style.display==='block') renderCalendar();
+}
+function taBasculer(id){
+  const l=taLire(), t=l.find(x=>x.id===id); if(!t) return;
+  t.fait=!t.fait; t.faitLe=t.fait?new Date().toISOString():undefined;
+  taEcrire(l);
+  if(typeof haptic==='function') haptic(t.fait?[8,4,8]:[4]);
+  taRafraichirVues(600);
+}
+function taSupprimer(id){
+  const l=taLire(), i=l.findIndex(x=>x.id===id); if(i<0) return;
+  const [retiree]=l.splice(i,1);
+  taEcrire(l);
+  taRafraichirVues(0);
+  taToastAnnuler('Tâche supprimée', ()=>{ const l2=taLire(); l2.splice(Math.min(i,l2.length),0,retiree); taEcrire(l2); taRafraichirVues(0); });
+}
+// Les vues ouvertes (fiche, liste) se redessinent ; la case cochée a le
+// temps de s'animer avant que la tâche ne descende dans « Faites ».
+let _taMinuterie=null;
+function taRafraichirVues(delai){
+  clearTimeout(_taMinuterie);
+  _taMinuterie=setTimeout(()=>{
+    const el=_fl?.el;
+    if(el?._fc && el.querySelector('#ev-checklist')) fcRendreTaches(el, el._fc);
+    if(el?._afaire) taRendreListe(el);
+    const dock=document.getElementById('ta-dock');
+    if(dock && !dock.hidden) taRendreListe(dock);
+    if(document.getElementById('cal-body')?.style.display==='block') renderCalendar();
+  }, delai);
+}
+function taItemHtml(t){
+  const meta=[];
+  if(t.mat) meta.push(escapeHtml(t.mat));
+  if(t.due){ const d=new Date(t.due); meta.push(taJour(d)+(t.jourSeul?'':' · '+fmtTime(d))); }
+  const retard = !t.fait && t.due && new Date(t.due) < new Date() && !memeJourParis(new Date(t.due), new Date());
+  return `<div class="ta-item${t.fait?' fait':''}${retard?' retard':''}" data-id="${t.id}">
+    <input type="checkbox" id="ta-${t.id}" ${t.fait?'checked':''} onchange="taBasculer('${t.id}')">
+    <label for="ta-${t.id}"><span class="ta-texte">${escapeHtml(t.t)}</span>${meta.length?`<span class="ta-meta">${meta.join(' · ')}</span>`:''}</label>
+    <button type="button" class="ta-suppr" onclick="taSupprimer('${t.id}')" aria-label="Supprimer « ${escapeHtml(t.t)} »"><svg class="px" data-px="trash" aria-hidden="true"></svg></button>
+  </div>`;
+}
+
+/* Saisie rapide en français : « TP réseau #R301 jeudi », « fiche demain »,
+   « exo 4 pc » (prochain cours), « rendu 12/12 ». Les mots reconnus sont
+   retirés du texte. */
+function taMatieresConnues(){ const s=new Set(); taTousCours().forEach(ev=>s.add(subjectKey(ev.title))); return [...s]; }
+function taAnalyser(brut, {mat=null}={}){
+  let texte=' '+brut+' ', due=null, occ=null, jourSeul=true, dateDonnee=false;
+  const norm=s=>s.toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z0-9]/g,'');
+  // #matière
+  const mh=texte.match(/\s#([^\s#]+)/);
+  if(mh){
+    const cible=norm(mh[1]);
+    const trouve=taMatieresConnues().find(k=>norm(k)===cible) || taMatieresConnues().find(k=>norm(k).startsWith(cible)) || taMatieresConnues().find(k=>norm(k).includes(cible));
+    mat=trouve||mh[1].toUpperCase();
+    texte=texte.replace(mh[0],' ');
+  }
+  const auj=new Date(); auj.setHours(0,0,0,0);
+  const fixer=(d,re)=>{ due=d.toISOString(); dateDonnee=true; texte=texte.replace(re,' '); };
+  let m;
+  if((m=texte.match(/\s(pc|prochain cours|pour le prochain cours)(?=\s)/i)) && mat){
+    const s=taProchainCours(mat,new Date());
+    if(s){ due=new Date(s.start).toISOString(); occ=taOcc(s.title,s.start); jourSeul=false; dateDonnee=true; texte=texte.replace(m[0],' '); }
+  }
+  else if((m=texte.match(/\s(aujourd'?hui|auj)(?=\s)/i))) fixer(new Date(auj), m[0]);
+  else if((m=texte.match(/\s(apr[eè]s[- ]demain)(?=\s)/i))){ const d=new Date(auj); d.setDate(d.getDate()+2); fixer(d,m[0]); }
+  else if((m=texte.match(/\s(demain|dem)(?=\s)/i))){ const d=new Date(auj); d.setDate(d.getDate()+1); fixer(d,m[0]); }
+  else if((m=texte.match(/\s(lun|mar|mer|jeu|ven|sam|dim)(?:di|credi|udi|dredi|edi|anche)?\.?(?=\s)/i))){
+    const idx={dim:0,lun:1,mar:2,mer:3,jeu:4,ven:5,sam:6}[m[1].toLowerCase()];
+    const d=new Date(auj); let n=(idx-d.getDay()+7)%7; if(n===0) n=7; d.setDate(d.getDate()+n); fixer(d,m[0]);
+  }
+  else if((m=texte.match(/\s(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=\s)/))){
+    let an=m[3]? (+m[3]<100? 2000+(+m[3]) : +m[3]) : auj.getFullYear();
+    const d=new Date(an, +m[2]-1, +m[1]); if(!m[3] && d<auj) d.setFullYear(an+1);
+    fixer(d,m[0]);
+  }
+  // Un jour sans heure : rattacher au cours de la matière ce jour-là s'il existe
+  if(dateDonnee && jourSeul && mat){
+    const ev=taTousCours().find(e=>subjectKey(e.title)===mat && memeJourParis(e.start,new Date(due)));
+    if(ev){ due=ev.start.toISOString(); occ=taOcc(ev.title,ev.start); jourSeul=false; }
+  }
+  // Avec une matière et sans date : prochain cours de cette matière
+  if(!dateDonnee && mh && mat){
+    const s=taProchainCours(mat,new Date());
+    if(s){ due=new Date(s.start).toISOString(); occ=taOcc(s.title,s.start); jourSeul=false; dateDonnee=true; }
+  }
+  return {texte:texte.replace(/\s+/g,' ').trim()||brut, mat, due, occ, jourSeul, dateDonnee};
+}
+
+/* Migration : les anciennes tâches étaient rangées par séance sous une clé
+   hachée (ade-evtasks-…). On les retrouve en recalculant la clé de chaque
+   cours chargé ; celles d'aucun cours connu passent « Sans date ». */
+function taMigrer(toutes){
+  let anciennes=[];
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k?.startsWith('ade-evtasks-')) anciennes.push(k); } }catch(e){ return; }
+  if(!anciennes.length) return;
+  const l=taLire(), restantes=new Set(anciennes);
+  for(const ev of taTousCours()){
+    const k=makeTaskKey(ev.title, ev.start.toISOString());
+    if(!restantes.has(k)) continue;
+    let arr=[]; try{ arr=JSON.parse(localStorage.getItem(k)||'[]'); }catch(e){}
+    arr.forEach(x=>l.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), t:x.text||'', fait:!!x.done,
+      mat:subjectKey(ev.title), due:ev.start.toISOString(), occ:taOcc(ev.title,ev.start), jourSeul:false, cree:new Date().toISOString()}));
+    localStorage.removeItem(k); restantes.delete(k);
+  }
+  if(toutes){
+    for(const k of restantes){
+      let arr=[]; try{ arr=JSON.parse(localStorage.getItem(k)||'[]'); }catch(e){}
+      arr.forEach(x=>l.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), t:x.text||'', fait:!!x.done, mat:null, due:null, occ:null, jourSeul:true, cree:new Date().toISOString()}));
+      localStorage.removeItem(k);
+    }
+  }
+  taEcrire(l);
+}
+
+/* Liste globale « À faire » */
+const TA_AIDE='#matière · demain · jeudi · 12/12 · pc (prochain cours)';
+function taVueHtml(fermer){
+  return `<article class="fc ta-vue">
+    <div class="fc-haut"><h2 class="fc-titre" style="margin:0">À faire</h2>
+      <button class="fc-fermer" onclick="${fermer}" aria-label="Fermer"><svg class="px" data-px="close" aria-hidden="true"></svg></button></div>
+    <div class="fc-ajout ta-ajout">
+      <input type="text" class="ta-saisie" placeholder="Nouvelle tâche… #R301 jeudi" maxlength="140" enterkeyhint="send" autocomplete="off" aria-label="Nouvelle tâche">
+      <button class="btn-main" onclick="taSaisir(this.closest('.ta-vue'))" aria-label="Ajouter">+</button>
+    </div>
+    <div class="ta-aide ta-apercu">${TA_AIDE}</div>
+    <div class="ta-liste" aria-live="polite"></div>
+  </article>`;
+}
+function taLierVue(racine){
+  const inp=racine.querySelector('.ta-saisie'), ap=racine.querySelector('.ta-apercu');
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); taSaisir(racine); } });
+  inp.addEventListener('input',()=>{
+    const v=inp.value.trim();
+    if(!v){ ap.textContent=TA_AIDE; return; }
+    const p=taAnalyser(v);
+    ap.textContent='→ '+[p.mat||'sans matière', p.due?taJour(p.due)+(p.jourSeul?'':' '+fmtTime(new Date(p.due))):'sans date'].join(' · ');
+  });
+  taRendreListe(racine);
+}
+
+/* PC avec un EDT affiché : panneau ancré à droite du calendrier, qui reste
+   ouvert pendant qu'on navigue. Ailleurs : feuille (téléphone) ou fenêtre. */
+const taDockPossible=()=>LARGE.matches && document.body.classList.contains('edt-on');
+function taDock(){
+  let d=document.getElementById('ta-dock');
+  if(!d){
+    d=document.createElement('aside'); d.id='ta-dock'; d.className='ta-dock'; d.hidden=true;
+    d.setAttribute('aria-label','À faire');
+    document.querySelector('.page-inner')?.appendChild(d);
+  }
+  return d;
+}
+function ouvrirDockAFaire(focus){
+  const d=taDock();
+  if(d.hidden){ d.innerHTML=taVueHtml('fermerAFaire()'); taLierVue(d); }
+  d.hidden=false;
+  document.body.classList.add('ta-dock-on');
+  document.querySelectorAll('.tb-afaire').forEach(b=>b.setAttribute('aria-pressed','true'));
+  try{ localStorage.setItem('ade-ta-dock','1'); }catch(e){}
+  if(focus) d.querySelector('.ta-saisie')?.focus({preventScroll:true});
+}
+function fermerAFaire(){
+  const d=document.getElementById('ta-dock');
+  if(d){ d.hidden=true; d.innerHTML=''; }
+  document.body.classList.remove('ta-dock-on');
+  document.querySelectorAll('.tb-afaire').forEach(b=>b.setAttribute('aria-pressed','false'));
+  try{ localStorage.removeItem('ade-ta-dock'); }catch(e){}
+}
+function ouvrirAFaire(){
+  taMigrer(true);
+  if(taDockPossible()){
+    const d=document.getElementById('ta-dock');
+    if(d && !d.hidden) fermerAFaire(); else ouvrirDockAFaire(true);
+    return;
+  }
+  const el=flOuvrir(taVueHtml('flFermer()'),{label:'À faire', x:innerWidth/2-180, y:80});
+  el._afaire=true;
+  taLierVue(el);
+  requestAnimationFrame(()=>{ if(_fl?.mobile) flMesurer(); else flRecaler(); });
+}
+// Le panneau suit l'affichage : il se range quand l'EDT se ferme ou que la
+// fenêtre rétrécit, et revient tout seul s'il était ouvert.
+function taSuivreDock(){
+  const voulu=(()=>{ try{ return localStorage.getItem('ade-ta-dock')==='1'; }catch(e){ return false; } })();
+  const d=document.getElementById('ta-dock');
+  if(taDockPossible()){ if(voulu && (!d || d.hidden)) ouvrirDockAFaire(false); }
+  else if(d && !d.hidden){ d.hidden=true; d.innerHTML=''; document.body.classList.remove('ta-dock-on'); }
+}
+new MutationObserver(taSuivreDock).observe(document.body,{attributes:true,attributeFilter:['class']});
+LARGE.addEventListener('change',taSuivreDock);
+
+function taSaisir(racine){
+  racine=racine||_fl?.el; const inp=racine?.querySelector('.ta-saisie'); if(!inp) return;
+  const v=inp.value.trim(); if(!v) return;
+  const p=taAnalyser(v);
+  taAjouter({t:p.texte, mat:p.mat, due:p.due, occ:p.occ, jourSeul:p.jourSeul});
+  inp.value=''; inp.dispatchEvent(new Event('input')); inp.focus();
+  taRendreListe(racine);
+}
+function taRendreListe(el){
+  const box=el.querySelector('.ta-liste'); if(!box) return;
+  const l=taLire();
+  const auj=new Date(); auj.setHours(0,0,0,0);
+  const j=n=>{ const d=new Date(auj); d.setDate(d.getDate()+n); return d; };
+  const groupes=[['En retard',[]],["Aujourd'hui",[]],['Demain',[]],['Cette semaine',[]],['Plus tard',[]],['Sans date',[]]];
+  const faites=[];
+  for(const t of l){
+    if(t.fait){ faites.push(t); continue; }
+    if(!t.due){ groupes[5][1].push(t); continue; }
+    const d=new Date(t.due);
+    if(d<auj) groupes[0][1].push(t);
+    else if(d<j(1)) groupes[1][1].push(t);
+    else if(d<j(2)) groupes[2][1].push(t);
+    else if(d<j(7)) groupes[3][1].push(t);
+    else groupes[4][1].push(t);
+  }
+  const tri=(a,b)=>new Date(a.due||0)-new Date(b.due||0);
+  let h=groupes.filter(g=>g[1].length).map(([nom,ts])=>
+    `<div class="ta-groupe${nom==='En retard'?' retard':''}"><div class="ta-groupe-tete">${nom}<span>${ts.length}</span></div>${ts.sort(tri).map(taItemHtml).join('')}</div>`).join('');
+  if(!h) h=`<div class="ta-vide"><svg class="px" data-px="check" aria-hidden="true"></svg>Rien à faire. Ajoute une tâche ci-dessus ou depuis la fiche d'un cours.</div>`;
+  if(faites.length){
+    faites.sort((a,b)=>new Date(b.faitLe||0)-new Date(a.faitLe||0));
+    h+=`<details class="ta-faites"><summary>Faites (${faites.length})</summary>${faites.slice(0,30).map(taItemHtml).join('')}
+      <button type="button" class="fc-lien" onclick="taViderFaites()">Effacer les tâches faites</button></details>`;
+  }
+  box.innerHTML=h;
+}
+function taViderFaites(){
+  const l=taLire(), garde=l.filter(t=>!t.fait), parties=l.filter(t=>t.fait);
+  taEcrire(garde); taRafraichirVues(0);
+  taToastAnnuler(`${parties.length} tâche${parties.length>1?'s':''} effacée${parties.length>1?'s':''}`, ()=>{ taEcrire(taLire().concat(parties)); taRafraichirVues(0); });
+}
+// Toast avec « Annuler » (5 s) plutôt qu'une confirmation
+function taToastAnnuler(msg, annuler){
+  document.getElementById('ta-toast')?.remove();
+  const t=document.createElement('div'); t.id='ta-toast'; t.className='ta-toast'; t.setAttribute('role','status');
+  t.innerHTML=`<span>${escapeHtml(msg)}</span><button type="button">Annuler</button>`;
+  t.querySelector('button').onclick=()=>{ annuler(); t.remove(); };
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),5000);
+}
+// Compteur sur l'onglet « À faire » : tâches ouvertes pour aujourd'hui, demain et en retard
+function taMajCompteurs(){
+  const lim=new Date(); lim.setHours(0,0,0,0); lim.setDate(lim.getDate()+2);
+  const n=taLire().filter(t=>!t.fait && t.due && new Date(t.due)<lim).length;
+  document.querySelectorAll('.ta-badge').forEach(b=>{ b.textContent=n>9?'9+':String(n); b.hidden=!n; });
+  // Pastille sur l'icône de l'appli installée (Chrome/Edge bureau, Safari)
+  try{ if('setAppBadge' in navigator){ n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } }catch(e){}
+}
+// Raccourcis du manifeste (appui long sur l'icône) : ?ouvrir=afaire | aujourdhui
+(function(){
+  const o=new URLSearchParams(location.search).get('ouvrir');
+  if(!o) return;
+  history.replaceState(null,'',location.pathname+location.hash);
+  addEventListener('load',()=>setTimeout(()=>{
+    if(o==='afaire') ouvrirAFaire();
+    else if(o==='aujourdhui' && typeof mbnToday==='function') mbnToday();
+  },700));
+})();
+document.addEventListener('DOMContentLoaded',taMajCompteurs);
+/* ============================================================
+   NOTIFICATIONS PUSH
+   Le Worker de worker-push/ envoie un push vide toutes les fois qu'il y a
+   quelque chose à dire ; sw.js va chercher le texte. Tant que les deux
+   constantes sont vides, la section reste cachée.
+   Voir worker-push/README.md pour la mise en place.
+   ============================================================ */
+const PUSH_WORKER = '';   // ex. 'https://edt-rt-push.ton-compte.workers.dev'
+const PUSH_VAPID  = '';   // VAPID_PUBLIC, généré avec outils/cles_vapid.html
+
+function pushDispo(){
+  return !!(PUSH_WORKER && PUSH_VAPID && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window);
+}
+function pushPrefs(){ try{ return JSON.parse(localStorage.getItem('ade-push')||'{}'); }catch(e){ return {}; } }
+function b64uVersOctets(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; return Uint8Array.from(atob(s),c=>c.charCodeAt(0)); }
+
+async function pushActiver(){
+  const etat=document.getElementById('push-etat');
+  // iOS : le push n'existe que pour l'appli ajoutée à l'écran d'accueil
+  if(typeof estIOS==='function' && estIOS() && !estInstallee()){
+    etat.textContent='Sur iPhone, installe d\'abord l\'appli sur l\'écran d\'accueil, puis active depuis l\'appli.';
+    if(typeof ouvrirAideIOS==='function') ouvrirAideIOS();
+    return;
+  }
+  const ids=[...selected];
+  if(!ids.length){ etat.textContent='Choisis d\'abord l\'emploi du temps à suivre.'; return; }
+  const btn=document.getElementById('push-btn'); btn.disabled=true; etat.textContent='…';
+  try{
+    // Demandé ici, au clic : Safari et Firefox refusent une demande sans geste
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ etat.textContent='Notifications refusées. On peut les réautoriser dans les réglages du site.'; return; }
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64uVersOctets(PUSH_VAPID)});
+    const p={rappel:+document.getElementById('push-rappel').value, changements:document.getElementById('push-changements').checked};
+    const r=await fetch(PUSH_WORKER.replace(/\/$/,'')+'/abonner',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({sub:sub.toJSON(), urls:ids.map(id=>buildIcalUrl([id])), noms:ids.map(id=>labelForId(id)), ...p})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    // Le service worker lit l'adresse du Worker ici pour aller chercher le texte
+    await (await caches.open('ade-push')).put('cfg', new Response(JSON.stringify({worker:PUSH_WORKER.replace(/\/$/,'')})));
+    localStorage.setItem('ade-push', JSON.stringify({...p, ids, actif:true}));
+    showToast('Notifications activées');
+  }catch(e){
+    etat.textContent='Activation impossible ('+(e.message||e)+'). Réessaie avec du réseau.';
+    return;
+  }finally{ btn.disabled=false; }
+  pushRendre();
+}
+async function pushDesactiver(){
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.getSubscription();
+    if(sub){
+      fetch(PUSH_WORKER.replace(/\/$/,'')+'/desabonner',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})}).catch(()=>{});
+      await sub.unsubscribe();
+    }
+  }catch(e){}
+  localStorage.removeItem('ade-push');
+  showToast('Notifications désactivées');
+  pushRendre();
+}
+function pushRendre(){
+  const s=document.getElementById('push-section'); if(!s) return;
+  s.hidden=!pushDispo(); if(s.hidden) return;
+  const p=pushPrefs(), etat=document.getElementById('push-etat');
+  if(p.rappel!==undefined) document.getElementById('push-rappel').value=String(p.rappel);
+  if(p.changements!==undefined) document.getElementById('push-changements').checked=!!p.changements;
+  const actif=p.actif && Notification.permission==='granted';
+  document.getElementById('push-off').hidden=!actif;
+  const memeSel = actif && [...selected].sort().join(',')===(p.ids||[]).slice().sort().join(',');
+  document.getElementById('push-btn').textContent = !actif ? 'Activer sur cet appareil'
+    : memeSel ? 'Enregistrer les réglages' : 'Suivre la sélection actuelle';
+  etat.textContent = actif ? 'Actives pour : '+(p.ids||[]).map(id=>labelForId(id)).join(', ')
+    : Notification.permission==='denied' ? 'Bloquées dans le navigateur pour ce site.' : '';
+}
+// Raccourci T (hors saisie)
+document.addEventListener('keydown',e=>{
+  if(e.key!=='t' && e.key!=='T') return;
+  if(e.ctrlKey||e.metaKey||e.altKey||_fl) return;
+  if(e.target.closest?.('input,textarea,select,[contenteditable]')) return;
+  e.preventDefault(); ouvrirAFaire();
+});
+setTimeout(taMajCompteurs,0);
 
 /* Les autres fenêtres (examens, créneaux, stats, notes de semaine…)
    deviennent des feuilles en CSS sur téléphone ; on leur ajoute le
