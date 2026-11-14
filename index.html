@@ -2833,7 +2833,25 @@ header.topbar .toggle-wrap{position:static;}
 .cal-hour-line.half{opacity:.5;}
 .cal-time-label{font-size:10px;}
 /* Sur téléphone, les onglets de jour disent déjà « Lun 16 » */
-@media(max-width:700px){ .cal-day-headers{display:none;} }
+/* Noms des EDT au-dessus de leurs sous-colonnes */
+.cal-noms{display:grid;gap:1px;margin-top:3px;}
+.cal-nom{font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;text-align:center;white-space:nowrap;}
+/* Sur téléphone, les onglets de jour disent déjà « Lun 16 » : on ne garde
+   la ligne d'en-tête que pour nommer les colonnes quand il y a plusieurs EDT */
+@media(max-width:700px){
+  .cal-day-headers:not(.multi){display:none;}
+  .cal-day-headers.multi .dh-jour{display:none;}
+  .cal-day-headers.multi .cal-day-header{padding:6px 2px;}
+  .cal-day-headers.multi .cal-noms{margin-top:0;gap:0;}
+  .cal-day-headers.multi .cal-nom{
+    font:600 11px var(--f-mono);color:var(--text);letter-spacing:.01em;
+    padding:4px 3px;border-left:1px solid var(--border);
+  }
+  .cal-day-headers.multi .cal-nom:first-child{border-left:0;}
+  /* La vue jour ne défile jamais en largeur : sans overflow ici, l'en-tête
+     sticky se colle au haut de l'écran et les noms restent visibles en défilant */
+  .cal-body,.cal-wrapper{overflow:visible !important;}
+}
 
 /* Cours : bande de couleur à gauche sur fond à peine teinté, texte toujours lisible */
 .cal-event.ev-subj{
@@ -4982,15 +5000,16 @@ function _renderCalendarInterne(){
   let html=`<div class="cal-grid" style="--cal-height:${totalH}px">`;
 
   // Headers
-  html+=`<div class="cal-day-headers" style="grid-template-columns:${gridCols}">`;
+  // « multi » : plusieurs EDT côte à côte, il faut nommer chaque sous-colonne
+  html+=`<div class="cal-day-headers${nEDT>1?' multi':''}" style="grid-template-columns:${gridCols}">`;
   html+=`<div class="cal-day-header"></div>`;
   daysToRender.forEach((day,di)=>{
     const isToday=isSameDay(day,today);
     const di2=dayIndices[di];
     html+=`<div class="cal-day-header${isToday?' today':''}">
-      ${DAYS_FR[di2]}<span class="day-num">${day.getDate()}</span>
-      ${nEDT>1?`<div style="display:grid;grid-template-columns:repeat(${nEDT},1fr);gap:1px;margin-top:3px">
-        ${selectedIds.map(id=>`<div style="font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;text-align:center;white-space:nowrap">${labelForId(id)}</div>`).join('')}
+      <span class="dh-jour">${DAYS_FR[di2]}<span class="day-num">${day.getDate()}</span></span>
+      ${nEDT>1?`<div class="cal-noms" style="grid-template-columns:repeat(${nEDT},1fr)">
+        ${selectedIds.map(id=>`<div class="cal-nom" title="${labelForId(id)}">${labelForId(id)}</div>`).join('')}
       </div>`:''}
     </div>`;
   });
