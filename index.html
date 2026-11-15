@@ -3049,6 +3049,60 @@ header.topbar .toggle-wrap{position:static;}
     .cal-today-btn{display:none;}
   }
 }
+/* PC : l'EDT et le panneau « À faire » tiennent dans la hauteur de l'écran.
+   Chacun défile à l'intérieur ; la page elle-même n'a plus à défiler pour en
+   voir le bas. --y-col = haut des colonnes (sous la barre du haut), mesuré en JS. */
+@media(min-width:1100px){
+  body.edt-on .cal-wrapper, body.edt-on .ta-dock{
+    position:sticky; top:12px; align-self:start;
+    height:calc(100dvh - var(--y-col, 88px) - 14px); max-height:none;
+  }
+  /* Marge du bas = la même que sous les colonnes : la page fait pile la hauteur d'écran */
+  body.edt-on .page{ padding-bottom:14px !important; min-height:100dvh; height:100dvh;
+    grid-template-rows:auto auto auto auto auto minmax(0,1fr) !important; }
+  /* Sélection dépliée (« Modifier ») : elle défile dans sa colonne au lieu d'allonger la page */
+  body.edt-on .page-inner > .glass{ grid-row:5 / 7 !important; align-self:stretch !important; min-height:0; overflow-y:auto !important; overscroll-behavior:contain; }
+  body.edt-on .page-inner > .glass.repli{ align-self:start !important; }
+  body.edt-on .cal-wrapper > .glass{ height:100%; display:flex; flex-direction:column; overflow:hidden !important; }
+  body.edt-on .cal-wrapper > .glass > *{ flex-shrink:0; }
+  body.edt-on #cal-body{ flex:1 1 auto !important; min-height:0; overflow:auto; overscroll-behavior:contain; }
+  body.edt-on #cal-body .cal-day-headers{ position:sticky; top:0; z-index:6; background:var(--surf); }
+  body.edt-on .ta-dock{ overflow-y:auto; }
+}
+/* Sélection en fenêtre (bouton « Modifier » une fois l'EDT affiché) */
+.sel-voile{ position:fixed; inset:0; z-index:690; background:rgba(8,10,12,.5); animation:fadeIn .2s var(--e-std) both; }
+.sel-popup-tete{ display:none; }
+/* La cale prend la place du bloc dans la grille PC (même zone) */
+@media(min-width:1100px){ body.edt-on .sel-cale{ grid-column:1; grid-row:5; } }
+.glass.sel-popup .sel-popup-tete{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:12px 14px 10px; position:sticky; top:0; z-index:3; background:var(--surf); border-bottom:1px solid var(--border); }
+.sel-popup-titre{ font:600 16px var(--f-ui); color:var(--text); }
+.glass.sel-popup{
+  position:fixed !important; z-index:700 !important; margin:0 !important;
+  left:50% !important; top:50% !important; transform:translate(-50%,-50%);
+  width:min(920px, calc(100vw - 32px)) !important; max-height:min(86dvh, 820px) !important;
+  overflow-y:auto !important; overscroll-behavior:contain;
+  background:var(--surf) !important; border:1px solid var(--line) !important; border-radius:14px !important;
+  box-shadow:0 24px 70px rgba(0,0,0,.45) !important;
+  animation:selPopEntre var(--d-entree) var(--e-entree) both;
+}
+.glass.sel-popup > .sel-resume{ display:none !important; }
+/* Sur PC, la grille de cartes reprend plusieurs colonnes dans la fenêtre */
+@media(min-width:1100px){
+  body.edt-on .glass.sel-popup .grid, body.edt-on .glass.sel-popup .grid-2col{ grid-template-columns:repeat(auto-fill,minmax(180px,1fr)) !important; max-height:none !important; }
+  body.edt-on .glass.sel-popup .btns-sm{ display:flex !important; }
+  body.edt-on .glass.sel-popup .sel-count{ display:inline !important; }
+}
+@keyframes selPopEntre{ from{ opacity:0; transform:translate(-50%,calc(-50% + 14px)) scale(.97); } }
+/* Téléphone : feuille qui monte du bas */
+@media(max-width:700px){
+  .glass.sel-popup{ left:0 !important; right:0 !important; top:auto !important; bottom:0 !important; transform:none;
+    width:100% !important; max-height:88svh !important; border-radius:16px 16px 0 0 !important;
+    padding-bottom:env(safe-area-inset-bottom) !important; animation:selPopMonte .38s cubic-bezier(.32,.72,0,1) both; }
+  @keyframes selPopMonte{ from{ transform:translateY(100%); } }
+  body.sel-popup-on .mobile-bottom-nav{ visibility:hidden; }
+}
+body.sel-popup-on{ overflow:hidden; }
 @keyframes taDockEntre{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
 html[data-motion="reduit"] .ta-dock{animation:none;}
 /* Sélection réduite dans la barre latérale (PC) */
@@ -8528,7 +8582,7 @@ document.addEventListener('keydown',e=>{
   e.preventDefault(); el.click();
 });
 
-const FOCUS_FENETRES='[id$="-overlay"],section.fl,.pal-voile';
+const FOCUS_FENETRES='[id$="-overlay"],section.fl,.pal-voile,.glass.sel-popup';
 const FOCUSABLES='button:not([disabled]),[href],input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
 function fenetreOuverte(){
   const liste=[...document.querySelectorAll(FOCUS_FENETRES)].filter(el=>{
@@ -10266,9 +10320,54 @@ function replierSelection(oui){
   const g=document.querySelector('.page-inner .glass');
   if(!g) return;
   majResumeSelection();
+  // EDT affiché : « Modifier » ouvre la sélection en fenêtre par-dessus,
+  // au lieu de la déplier dans la page (qui poussait tout le reste)
+  if(!oui && document.body.classList.contains('edt-on')){ ouvrirSelectionPopup(); return; }
+  if(oui) fermerSelectionPopup(true);
   g.classList.toggle('repli',!!oui);
   if(!oui && !LARGE.matches) g.scrollIntoView({behavior:pxCalme()?'auto':'smooth',block:'start'});
 }
+/* Sélection en fenêtre : centrée sur PC, feuille du bas sur téléphone.
+   Le bloc reste à sa place dans le code, il passe juste en position fixe. */
+function ouvrirSelectionPopup(){
+  const g=document.querySelector('.page-inner .glass'); if(!g || g.classList.contains('sel-popup')) return;
+  const voile=document.createElement('div'); voile.className='sel-voile'; voile.id='sel-voile';
+  voile.addEventListener('click',()=>fermerSelectionPopup(false));
+  document.body.appendChild(voile);
+  if(!g.querySelector('.sel-popup-tete')){
+    const t=document.createElement('div'); t.className='sel-popup-tete';
+    t.innerHTML=`<span class="sel-popup-titre">Changer d'emploi du temps</span>
+      <button type="button" class="fc-fermer" aria-label="Fermer" onclick="fermerSelectionPopup(false)"><svg class="px" data-px="close" aria-hidden="true"></svg></button>`;
+    g.prepend(t);
+  }
+  // Cale de même hauteur : le bloc sort du flux, rien ne doit bouger derrière
+  if(!document.getElementById('sel-cale')){
+    const cale=document.createElement('div'); cale.id='sel-cale'; cale.className='sel-cale';
+    cale.style.height=g.offsetHeight+'px'; g.before(cale);
+  }
+  g.classList.remove('repli'); g.classList.add('sel-popup');
+  g.setAttribute('role','dialog'); g.setAttribute('aria-modal','true'); g.setAttribute('aria-label','Changer d\'emploi du temps');
+  document.body.classList.add('sel-popup-on');
+  if(typeof son==='function') son('ouvrir');
+  // Le focus va dans la recherche de l'onglet affiché (sur PC seulement : sur téléphone, le clavier cacherait tout)
+  if(LARGE.matches) setTimeout(()=>g.querySelector('.tab-pane.active input[type="text"], .tab-pane.active input')?.focus({preventScroll:true}),60);
+}
+function fermerSelectionPopup(dejaFait){
+  const g=document.querySelector('.page-inner .glass');
+  document.getElementById('sel-voile')?.remove();
+  document.getElementById('sel-cale')?.remove();
+  document.body.classList.remove('sel-popup-on');
+  if(!g || !g.classList.contains('sel-popup')) return;
+  g.classList.remove('sel-popup'); g.removeAttribute('role'); g.removeAttribute('aria-modal'); g.removeAttribute('aria-label');
+  if(!dejaFait){
+    majResumeSelection();
+    if(document.body.classList.contains('edt-on')) g.classList.add('repli');
+    if(typeof son==='function') son('fermer');
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.body.classList.contains('sel-popup-on')){ e.preventDefault(); fermerSelectionPopup(false); }
+});
 (function suivreAffichageEdt(){
   const corps=document.getElementById('cal-body'), cadre=document.getElementById('cal-wrapper');
   if(!corps||!cadre) return;
@@ -11222,6 +11321,19 @@ function taSuivreDock(){
   else if(d && !d.hidden){ d.hidden=true; d.innerHTML=''; document.body.classList.remove('ta-dock-on'); }
 }
 new MutationObserver(taSuivreDock).observe(document.body,{attributes:true,attributeFilter:['class']});
+
+// PC : haut des colonnes (sous la barre du haut), pour que l'EDT et le
+// panneau « À faire » prennent exactement la hauteur d'écran restante
+function calerColonnes(){
+  if(!LARGE.matches || !document.body.classList.contains('edt-on')) return;
+  const w=document.getElementById('cal-wrapper'); if(!w) return;
+  const y=Math.round(w.getBoundingClientRect().top + scrollY);
+  if(y>0) document.documentElement.style.setProperty('--y-col', y+'px');
+}
+addEventListener('resize', calerColonnes);
+LARGE.addEventListener('change', calerColonnes);
+new MutationObserver(()=>requestAnimationFrame(calerColonnes)).observe(document.body,{attributes:true,attributeFilter:['class']});
+setTimeout(calerColonnes, 300);
 LARGE.addEventListener('change',taSuivreDock);
 
 function taSaisir(racine){
