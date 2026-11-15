@@ -2021,9 +2021,6 @@ kbd{
   border-radius:2px;will-change:transform,opacity;
   animation:confettiFall linear forwards;
 }
-@keyframes confettiFall{
-  to{ transform:translateY(110vh) rotate(720deg); opacity:.15; }
-}
 
 /* ============================================================
    🖨 PRINT STYLES
@@ -2535,18 +2532,23 @@ html.eco .params-section-card,
 html.eco .modal,
 html.eco .btn-main{ box-shadow: none !important; }
 
-/* Animations décoratives en boucle infinie */
+/* Animations décoratives en boucle infinie : coupées. Les mouvements courts
+   sur transform/opacity (appui, fiches, cascade, navigation) restent : ils
+   ne coûtent presque rien au GPU et ce sont eux qui donnent la sensation de
+   réponse. Avant, le mode éco (activé par défaut) les ramenait tous à
+   0,01 ms : le site paraissait figé pour presque tout le monde. */
 html.eco .confetti-piece{ display:none !important; }
-html.eco *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; }
-
-/* Transitions raccourcies plutôt que supprimées : on garde le retour visuel */
-html.eco *{ transition-duration:.08s !important; }
+html.eco .orb{ display:none !important; }   /* flou de 90 px en boucle : le plus cher */
+html.eco .eyebrow-star, html.eco .konami-banner, html.eco [style*="spinGear"]{ animation:none !important; }
 html.eco .cal-event:hover{ transform:none !important; }
 
-/* Respecte aussi le réglage système */
-@media (prefers-reduced-motion: reduce){
-  *{ animation-duration:.01ms !important; transition-duration:.08s !important; }
-}
+/* Animations réduites (réglage système, ou choix dans Paramètres) : plus de
+   déplacements ni de rebonds, mais les fondus courts restent (ils aident à
+   suivre ce qui change). Un seul attribut décide : html[data-motion]. */
+html[data-motion="reduit"] *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.12s !important; }
+html[data-motion="reduit"]::view-transition-group(*),
+html[data-motion="reduit"]::view-transition-old(*),
+html[data-motion="reduit"]::view-transition-new(*){ animation:none !important; }
 
 /* ============================================================
    EN-TÊTE ET HORLOGE SUR PETIT ÉCRAN
@@ -2970,6 +2972,9 @@ header.topbar .toggle-wrap{position:static;}
   border:1px solid var(--border);background:transparent;color:var(--text2);font:500 12.5px var(--f-ui);cursor:pointer;white-space:nowrap;}
 .tb-afaire:hover{border-color:var(--line);color:var(--text);}
 @media(max-width:700px){ .tb-afaire{display:none;} }
+/* Téléphone : Chercher et Réglages vivent dans la barre du bas, sous le pouce.
+   Les doublons en haut sont retirés. */
+@media(max-width:700px){ .tb-cmdk, #params-btn{ display:none !important; } }
 .ta-badge{min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--acc);color:#fff;
   font:700 10px/17px var(--f-mono);text-align:center;}
 .ta-badge[hidden]{display:none;}
@@ -3008,6 +3013,11 @@ header.topbar .toggle-wrap{position:static;}
 .ta-item.retard .ta-meta{color:var(--danger,#e5534b);}
 .ta-suppr{border:0;background:none;color:var(--muted);width:36px;height:36px;margin:-6px -4px -6px 0;border-radius:8px;cursor:pointer;flex-shrink:0;opacity:.7;}
 .ta-suppr:hover{opacity:1;color:var(--text);background:color-mix(in srgb,var(--text) 6%,transparent);}
+.ta-item .ta-modif{margin-right:-8px;}
+.ta-item.edition .ta-suppr{display:none;}
+.ta-edit{flex:1;min-width:0;height:36px;margin:-7px 0 -5px;padding:0 10px;border-radius:8px;
+  border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 6%,transparent);color:var(--text);
+  font:400 16px var(--f-ui);outline:none;}
 .ta-vue{min-width:min(420px,100%);}
 .ta-vue .fc-haut{display:flex;align-items:center;justify-content:space-between;}
 /* Panneau « À faire » ancré à droite (PC, EDT affiché) */
@@ -3040,7 +3050,7 @@ header.topbar .toggle-wrap{position:static;}
   }
 }
 @keyframes taDockEntre{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
-@media(prefers-reduced-motion:reduce){ .ta-dock{animation:none;} }
+html[data-motion="reduit"] .ta-dock{animation:none;}
 /* Sélection réduite dans la barre latérale (PC) */
 @media(min-width:1100px){
   body.edt-on .glass.repli .sel-resume{padding:.7rem .9rem;}
@@ -3069,6 +3079,16 @@ header.topbar .toggle-wrap{position:static;}
   border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text);}
 .sy-statut{font:500 13px var(--f-ui);color:var(--ok,#3fb27f);margin:2px 0 4px;}
 .sy-statut.erreur{color:var(--danger,#e5534b);}
+.sy-statut{display:flex;align-items:center;gap:8px;}
+.sy-signal{display:inline-flex;align-items:flex-end;gap:2px;height:12px;}
+.sy-signal i{width:3px;background:currentColor;opacity:1;}
+.sy-signal i:nth-child(1){height:3px;} .sy-signal i:nth-child(2){height:6px;}
+.sy-signal i:nth-child(3){height:9px;} .sy-signal i:nth-child(4){height:12px;}
+.sy-signal.coupe i:nth-child(n+2){opacity:.25;}
+/* En cours : les barres s'allument une à une, en saccades (pixel / téléphone) */
+.sy-signal.actif i{animation:sySignal 1.2s steps(1,end) infinite;opacity:.25;}
+.sy-signal.actif i:nth-child(2){animation-delay:.3s;} .sy-signal.actif i:nth-child(3){animation-delay:.6s;} .sy-signal.actif i:nth-child(4){animation-delay:.9s;}
+@keyframes sySignal{ 0%{opacity:1;} 75%{opacity:.25;} }
 .sy-vue{max-width:380px;}
 .sy-vue .fc-haut{display:flex;align-items:center;justify-content:space-between;}
 .sy-aide{font:400 14px/1.45 var(--f-ui);color:var(--text2);margin:8px 0 12px;}
@@ -3077,6 +3097,11 @@ header.topbar .toggle-wrap{position:static;}
 .sy-qr svg{width:100%;height:100%;}
 .sy-code{font:600 19px var(--f-mono);letter-spacing:.08em;text-align:center;margin:14px 0 10px;user-select:all;}
 .sy-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
+.motion-choix{display:flex;gap:6px;flex-wrap:wrap;}
+.son-volume{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:10px;transition:opacity .2s;}
+.son-volume.inactif{opacity:.55;}
+.son-volume-lib{font:500 13px var(--f-ui);color:var(--text2);margin-right:4px;}
+.son-volume .son-essai{margin-left:auto;}
 .push-ligne{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;font:500 14px var(--f-ui);color:var(--text);}
 .push-ligne select{height:36px;font-size:14px;}
 .push-ligne input{width:20px;height:20px;accent-color:var(--acc);}
@@ -3616,6 +3641,10 @@ button:active > .px, .tab:active .px{ transform:translateY(1px); transition-dura
              border-color .18s var(--ease-out), color .18s var(--ease-out),
              box-shadow .25s var(--ease-out), opacity .2s var(--ease-out);
 }
+/* Gestes répétés des dizaines de fois (cartes, onglets, puces) : relâchement
+   court (220 ms) et rebond léger, sinon l'interface paraît « molle » */
+.card,.tab,.fav-chip,.cal-day-tab{ transition-property:transform,background-color,border-color,color,box-shadow,opacity;
+  transition-duration:.22s,.18s,.18s,.18s,.25s,.2s; transition-timing-function:var(--spring-snap),var(--ease-out),var(--ease-out),var(--ease-out),var(--ease-out),var(--ease-out); }
 .btn-main:active:not(:disabled),.btn-secondary:active:not(:disabled),.fav-chip:active,
 .jf-btn:active,.modal-x:active,.card:active,.card-mail:active,.fav-emoji-btn:active,
 .cal-day-tab:active,.wst-btn-stats:active{
@@ -3658,11 +3687,87 @@ button:active > .px, .tab:active .px{ transform:translateY(1px); transition-dura
 ::view-transition-old(root),::view-transition-new(root){ animation:none; mix-blend-mode:normal; }
 
 /* Mouvement réduit : on garde les fondus, on retire les déplacements */
-@media (prefers-reduced-motion: reduce){
-  .px.px-hop,.cal-event.px-in,.modal,.modal-box{ animation:none; }
-  .px,.track::after{ transition:none; }
+html[data-motion="reduit"] .px.px-hop, html[data-motion="reduit"] .cal-event.px-in,
+html[data-motion="reduit"] .modal, html[data-motion="reduit"] .modal-box{ animation:none; }
+html[data-motion="reduit"] .px, html[data-motion="reduit"] .track::after{ transition:none; }
+
+/* ============================================================
+   SYSTÈME DE MOTION (refonte) — voir reports/Refonte des animations interface.md
+   Durées (Material 3, Atlassian, NN/g) : appui 100 ms, sortie 160 ms,
+   entrée 240 ms, page 300 ms. Une sortie est toujours plus courte qu'une
+   entrée, et accélère (elle s'en va) quand l'entrée freine (elle arrive).
+   Le fréquent reste court et sobre ; le spectaculaire est réservé aux
+   moments rares (journée vidée).
+   ============================================================ */
+:root{
+  --d-appui:100ms; --d-sortie:160ms; --d-entree:240ms; --d-page:300ms;
+  --e-entree:cubic-bezier(.05,.7,.1,1);    /* M3 emphasized decelerate */
+  --e-sortie:cubic-bezier(.3,0,.8,.15);    /* M3 emphasized accelerate */
+  --e-std:cubic-bezier(.2,0,0,1);          /* M3 standard */
 }
-html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
+
+/* Navigation semaine / jour : la grille glisse dans le sens du geste
+   (View Transitions ; sans elles, simple cascade des cours) */
+.cal-inner,.cal-empty{ view-transition-name:edt-grille; }   /* jamais les deux à la fois */
+.cal-day-headers{ view-transition-name:edt-tetes; }
+#cal-title{ view-transition-name:edt-titre; }
+html[data-nav]{ view-transition-name:none; }          /* le reste de la page ne bouge pas et reste cliquable */
+html[data-nav]::view-transition{ pointer-events:none; }
+::view-transition-group(edt-grille),::view-transition-group(edt-tetes),::view-transition-group(edt-titre){ animation-duration:var(--d-page); }
+html[data-nav="avant"]::view-transition-old(edt-grille),html[data-nav="avant"]::view-transition-old(edt-tetes){ animation:vtSortGauche var(--d-sortie) var(--e-sortie) both; }
+html[data-nav="avant"]::view-transition-new(edt-grille),html[data-nav="avant"]::view-transition-new(edt-tetes){ animation:vtEntreDroite var(--d-page) var(--e-entree) both; }
+html[data-nav="arriere"]::view-transition-old(edt-grille),html[data-nav="arriere"]::view-transition-old(edt-tetes){ animation:vtSortDroite var(--d-sortie) var(--e-sortie) both; }
+html[data-nav="arriere"]::view-transition-new(edt-grille),html[data-nav="arriere"]::view-transition-new(edt-tetes){ animation:vtEntreGauche var(--d-page) var(--e-entree) both; }
+@keyframes vtSortGauche{ to{ transform:translateX(-10%); opacity:0; } }
+@keyframes vtSortDroite{ to{ transform:translateX(10%); opacity:0; } }
+@keyframes vtEntreDroite{ from{ transform:translateX(12%); opacity:0; } }
+@keyframes vtEntreGauche{ from{ transform:translateX(-12%); opacity:0; } }
+
+/* Cascade des cours : plus courte quand la grille glisse déjà */
+html[data-nav] .cal-event.px-in{ animation-duration:.4s; }
+
+/* Cases à cocher des tâches : coche à ressort, barré qui se dessine */
+.ta-item input[type="checkbox"]{
+  appearance:none;-webkit-appearance:none;width:22px;height:22px;margin:1px 0 0;flex-shrink:0;cursor:pointer;
+  border:2px solid color-mix(in srgb,var(--text) 35%,transparent);border-radius:7px;display:grid;place-items:center;
+  background:transparent;transition:background-color var(--d-appui) var(--e-std),border-color var(--d-appui) var(--e-std),transform .4s var(--spring-snap);
+}
+.ta-item input[type="checkbox"]::after{
+  content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;margin-top:-2px;
+  transform:rotate(45deg) scale(0);transition:transform .38s var(--spring-pop);
+}
+.ta-item input[type="checkbox"]:checked{ background:var(--acc);border-color:var(--acc); }
+.ta-item input[type="checkbox"]:checked::after{ transform:rotate(45deg) scale(1); }
+.ta-item input[type="checkbox"]:active{ transform:scale(.86);transition-duration:var(--d-appui); }
+.ta-item input[type="checkbox"]:focus-visible{ outline:2px solid var(--acc);outline-offset:2px; }
+.ta-texte{
+  background:linear-gradient(currentColor,currentColor) 0 58% / 0% 1.5px no-repeat;
+  transition:background-size .32s var(--e-std) .05s,color .3s var(--e-std),opacity .3s;
+}
+.ta-item.fait .ta-texte{ text-decoration:none;background-size:100% 1.5px; }
+/* Entrée et sortie de la liste */
+.ta-item.ta-entre{ animation:taEntre var(--d-entree) var(--e-entree) both; }
+@keyframes taEntre{ from{ opacity:0;transform:translateY(-6px) scale(.98); } }
+.ta-item.ta-part{ overflow:hidden;pointer-events:none; }
+
+/* Compteurs : petit rebond quand la valeur change */
+.bump{ animation:bump .45s var(--spring-pop); }
+@keyframes bump{ 0%{ transform:scale(1); } 30%{ transform:scale(1.28); } 100%{ transform:scale(1); } }
+
+/* Panneau « À faire » : sortie plus courte que l'entrée */
+.ta-dock.sort{ animation:taDockSort var(--d-sortie) var(--e-sortie) both; }
+@keyframes taDockSort{ to{ opacity:0;transform:translateX(16px); } }
+
+/* Célébration (journée vidée) : bannière qui monte, en pixels */
+.fete{ position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:9700;transform:translateX(-50%);
+  padding:10px 16px;border-radius:10px;background:var(--surf);border:1px solid var(--acc);color:var(--text);
+  font:600 14px var(--f-ui);box-shadow:var(--ombre-flottant,0 8px 30px rgba(0,0,0,.3));
+  animation:feteMonte .5s var(--spring-pop) both, feteSort .25s var(--e-sortie) 2.6s forwards;pointer-events:none;white-space:nowrap; }
+@keyframes feteMonte{ from{ opacity:0;transform:translate(-50%,18px) scale(.94); } }
+@keyframes feteSort{ to{ opacity:0;transform:translate(-50%,8px); } }
+
+html[data-motion="reduit"] .ta-item input[type="checkbox"]::after,
+html[data-motion="reduit"] .ta-texte{ transition:none; }
 
 </style>
 <body>
@@ -3676,6 +3781,16 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
   window._ecoMode = on;
   if(on) document.documentElement.classList.add('eco');
 })();
+/* Mouvement : UN seul attribut décide, html[data-motion="plein"|"reduit"].
+   Réglage « Animations » : auto (suit le système), plein, reduit. */
+window.appliquerMotion = function(){
+  var choix = null;
+  try{ choix = localStorage.getItem('ade-motion'); }catch(e){}
+  var systeme = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.dataset.motion = (choix==='plein'||choix==='reduit') ? choix : (systeme ? 'reduit' : 'plein');
+};
+appliquerMotion();
+try{ matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', appliquerMotion); }catch(e){}
 </script>
 
 <!-- ═══ PULL-TO-REFRESH (mobile) ═══ -->
@@ -4082,12 +4197,23 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
       <div class="custom-row">
         <div>
           <div class="custom-row-label">Mode éco</div>
-          <div class="custom-row-sub">Coupe les animations décoratives et espace les requêtes. Recommandé sur téléphone et petit PC.</div>
+          <div class="custom-row-sub">Coupe le flou, le décor et les boucles, et espace les requêtes. Les animations de l'interface restent.</div>
         </div>
         <label class="toggle params-toggle" title="Mode éco">
           <input type="checkbox" id="eco-toggle" checked onchange="onEcoToggle(this.checked)">
           <div class="track"></div>
         </label>
+      </div>
+      <div class="custom-row" style="align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div class="custom-row-label">Animations</div>
+          <div class="custom-row-sub">« Auto » suit le réglage « réduire les animations » de l'appareil.</div>
+        </div>
+        <div class="motion-choix" role="group" aria-label="Animations">
+          <button type="button" class="fc-chip" data-motion-choix="auto" onclick="choisirMotion('auto')">Auto</button>
+          <button type="button" class="fc-chip" data-motion-choix="plein" onclick="choisirMotion('plein')">Complètes</button>
+          <button type="button" class="fc-chip" data-motion-choix="reduit" onclick="choisirMotion('reduit')">Réduites</button>
+        </div>
       </div>
     </div>
 
@@ -4111,12 +4237,19 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
       <div class="custom-row">
         <div>
           <div class="custom-row-label" id="sound-label-params">Sons activés</div>
-          <div class="custom-row-sub">Micro-interactions sonores</div>
+          <div class="custom-row-sub">Pour les actions qui comptent : tâche faite, favori, navigation… Réglage propre à cet appareil.</div>
         </div>
         <label class="toggle params-toggle" title="Sons">
           <input type="checkbox" id="sound-toggle-params" onchange="onSoundToggleParams(this.checked)">
           <div class="track"></div>
         </label>
+      </div>
+      <div class="son-volume" id="son-volume" role="radiogroup" aria-label="Volume des sons">
+        <span class="son-volume-lib">Volume</span>
+        <button type="button" class="fc-chip" data-vol="discret" onclick="sonChoisirVolume('discret')">Discret</button>
+        <button type="button" class="fc-chip" data-vol="normal" onclick="sonChoisirVolume('normal')">Normal</button>
+        <button type="button" class="fc-chip" data-vol="fort" onclick="sonChoisirVolume('fort')">Fort</button>
+        <button type="button" class="btn-sm son-essai" onclick="sonEssai()" title="Écouter la palette">Écouter</button>
       </div>
     </div>
 
@@ -4369,6 +4502,8 @@ html.eco .px.px-hop, html.eco .cal-event.px-in{ animation:none !important; }
   <button class="mbn-btn" id="mbn-afaire" onclick="ouvrirAFaire()"><span class="mbn-icon"><svg class="px" data-px="todo" aria-hidden="true" focusable="false"></svg><span class="ta-badge" hidden></span></span><span class="mbn-label">À faire</span></button>
   <button class="mbn-btn" id="mbn-favs" onclick="mbnFavs()"><span class="mbn-icon">⭐</span><span class="mbn-label">Favoris</span></button>
   <button class="mbn-btn" id="mbn-search" onclick="ouvrirPalette()"><span class="mbn-icon">🔍</span><span class="mbn-label">Chercher</span></button>
+  <!-- Réglages sous le pouce : le bouton du haut était hors d'atteinte d'une main -->
+  <button class="mbn-btn" id="mbn-params" onclick="openParams()"><span class="mbn-icon">⚙️</span><span class="mbn-label">Réglages</span></button>
 </nav>
 
 <!-- FLOATING "AUJOURD'HUI" BUTTON (mobile, contextuel) -->
@@ -5451,9 +5586,27 @@ function initSwipe(){
     if(axis === null && (Math.abs(dx) > LOCK_PX || Math.abs(dy) > LOCK_PX)){
       axis = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
     }
-    // Si horizontal confirmé : bloquer le scroll de la page
-    if(axis === 'h') e.preventDefault();
+    // Si horizontal confirmé : bloquer le scroll de la page, et la grille suit le doigt
+    if(axis === 'h'){ e.preventDefault(); suivreDoigt(dx); }
   }, { passive: false });
+
+  // La grille suit le doigt avec une résistance élastique (comme iOS) : on
+  // sent qu'on « tire » le jour suivant. Au lâcher, la View Transition part
+  // de cette position (l'instantané est pris décalé), d'où la continuité.
+  const cibles = () => [...el.querySelectorAll('.cal-inner, .cal-day-headers, .cal-empty')];
+  const elastique = (x, w) => Math.sign(x) * (1 - 1/(Math.abs(x)*0.55/w + 1)) * w;
+  function suivreDoigt(dx){
+    if(document.documentElement.dataset.motion==='reduit') return;
+    const w = el.clientWidth || 360, d = elastique(dx, w*0.6);
+    cibles().forEach(c=>{ c.style.transition='none'; c.style.transform=`translateX(${d}px)`; c.style.opacity=String(1-Math.min(.35, Math.abs(d)/w)); });
+  }
+  function relacher(){
+    cibles().forEach(c=>{
+      if(!c.style.transform) return;
+      c.style.transition='transform .38s var(--spring-snap), opacity .2s var(--e-std)';
+      c.style.transform=''; c.style.opacity='';
+    });
+  }
 
   el.addEventListener('touchend', e => {
     if(axis !== 'h'){ axis = null; return; }
@@ -5462,12 +5615,12 @@ function initSwipe(){
     const vx = Math.abs(dx) / dt;
     if(Math.abs(dx) >= MIN_DIST || vx >= MIN_VEL){
       _swipeDir = dx < 0 ? 1 : -1;
-      if(dx < 0) navJour(1); else navJour(-1);
-    }
+      if(dx < 0) navJour(1); else navJour(-1);   // le nouveau rendu remplace la grille décalée
+    } else relacher();                            // pas assez loin : retour en place, à ressort
     axis = null;
   }, { passive: true });
 
-  el.addEventListener('touchcancel', () => { axis = null; }, { passive: true });
+  el.addEventListener('touchcancel', () => { relacher(); axis = null; }, { passive: true });
 }
 
 function navJour(dir){
@@ -5483,8 +5636,8 @@ function navJour(dir){
   }
   if(isMobile) haptic([8]);
   renderCalendar();
-  // Animation de slide sur mobile
-  if(isMobile){
+  // Animation de slide sur mobile (seulement sans View Transitions, qui s'en chargent)
+  if(isMobile && !document.startViewTransition){
     const grid = document.querySelector('#cal-body .cal-grid');
     if(grid){
       const cls = dir > 0 ? 'swipe-in-right' : 'swipe-in-left';
@@ -6381,8 +6534,13 @@ function savePin(){
   favs.push({name,ids:[...selected],emoji:(typeof _selectedFavEmoji!=='undefined'&&_selectedFavEmoji)||'⭐'});
   saveFavorites(favs);
   renderFavChips();
+  // Moment qui compte : éclats depuis le bouton Enregistrer
+  const r=document.querySelector('#modal-overlay .btn-main')?.getBoundingClientRect();
+  if(r && typeof pxBurst==='function') pxBurst(r.left+r.width/2, r.top+r.height/2);
   closeModal();
   showToast(`📌 Favori "${name}" épinglé !`);
+  // La nouvelle puce arrive avec un petit rebond
+  setTimeout(()=>{ const p=[...document.querySelectorAll('.fav-chip')].pop(); if(p && typeof bump==='function') bump(p); }, 30);
 }
 document.getElementById('fav-name-input').addEventListener('keydown',e=>{if(e.key==='Enter') savePin();});
 
@@ -7455,7 +7613,18 @@ function renderWeekStats(){
     const col=_TYPE_COLORS[type]||'#64748b';
     return `<span class="wst-chip" style="background:${col}18;border-color:${col};color:${col}">${type} · ${h}h</span>`;
   }).join('');
-  bar.innerHTML=`<span class="wst-total">⏱ ${totalH}h / sem.</span><div class="wst-chips">${chips}</div><button class="wst-btn-stats" onclick="openStatsModal()">📊 Semestre</button>`;
+  bar.innerHTML=`<span class="wst-total">⏱ <span class="wst-nb">${totalH}</span>h / sem.</span><div class="wst-chips">${chips}</div><button class="wst-btn-stats" onclick="openStatsModal()">📊 Semestre</button>`;
+  // Le total « défile » d'une semaine à l'autre (compteur, 400 ms, ralenti à l'arrivée)
+  const nb=bar.querySelector('.wst-nb'), de=window._wstAvant, a=parseFloat(totalH);
+  window._wstAvant=a;
+  if(nb && typeof de==='number' && de!==a && document.documentElement.dataset.motion!=='reduit'){
+    const t0=performance.now(), dec=String(totalH).includes('.')?1:0;
+    const pas=t=>{ const k=Math.min(1,(t-t0)/400), e=1-Math.pow(1-k,3);
+      nb.textContent=(de+(a-de)*e).toFixed(dec); if(k<1 && nb.isConnected) requestAnimationFrame(pas); };
+    nb.textContent=de.toFixed(dec); requestAnimationFrame(pas);
+    // Onglet en arrière-plan : les images d'animation sont suspendues, la valeur finale doit s'afficher quand même
+    setTimeout(()=>{ if(nb.isConnected) nb.textContent=totalH; }, 450);
+  }
 }
 
 /* ============================================================
@@ -8450,81 +8619,168 @@ closeModal = function(){
 };
 
 /* ============================================================
-   🎵 SOUND CUES — Web Audio API
+   SON — moteur et palette (refonte)
+   Principes repris des guides Microsoft / Apple / Material et de la
+   recherche sur les « earcons » (voir reports/Sound design interface web.md) :
+   - Désactivé par défaut (appli utilisée en cours) : on l'active dans
+     Paramètres → Sons. Réglage propre à chaque appareil, pas synchronisé.
+   - Silence sur ce qui est fréquent ou automatique (survol, saisie,
+     boutons ordinaires, ouverture auto des examens, passage de l'heure).
+     Un son = une action qui compte : sélection, bascule, tâche faite,
+     enregistrement, suppression, erreur, navigation de semaine.
+   - Une seule palette : gamme de ré majeur pentatonique (ré, mi, fa#,
+     la, si), fondamentales entre 370 Hz et 2,2 kHz (les haut-parleurs de
+     téléphone ne rendent presque rien en dessous). Montée = positif,
+     descente = retour ou suppression.
+   - Courts (30 à 400 ms), attaque douce (3 à 8 ms, pas de clic), fin
+     exponentielle. Timbre « pixel » : carrés et triangles adoucis par un
+     passe-bas, cloche FM pour les moments rares.
+   - Clin d'œil télécom : la navigation joue une paire de fréquences DTMF
+     (touches du téléphone), la synchro les deux tons d'un modem Bell 202
+     (1 200 / 2 200 Hz).
+   - Légère variation de hauteur à chaque lecture (comme Apple), anti-
+     rafale (un même son au plus toutes les 70 ms), limiteur en sortie.
+   - iOS : session « ambient », donc l'interrupteur silencieux coupe les sons
+     et la musique de l'élève n'est pas interrompue.
    ============================================================ */
-const _audioCtx = (()=>{
-  try{ return new (window.AudioContext||window.webkitAudioContext)(); }
-  catch(e){ return null; }
-})();
+let _audioCtx = null, _sonSortie = null, _sonReverb = null;
+const SON_VOLUMES = { discret:0.55, normal:0.9, fort:1.35 };
+function sonVolume(){ return SON_VOLUMES[localStorage.getItem('ade-sound-vol')] || SON_VOLUMES.normal; }
 
-function _playTone(freq, type='sine', dur=0.08, vol=0.08, startDelay=0){
-  if(!_audioCtx) return;
+function sonContexte(){
+  if(_audioCtx) return _audioCtx;
   try{
-    const osc = _audioCtx.createOscillator();
-    const gain = _audioCtx.createGain();
-    osc.connect(gain); gain.connect(_audioCtx.destination);
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, _audioCtx.currentTime + startDelay);
-    gain.gain.setValueAtTime(0, _audioCtx.currentTime + startDelay);
-    gain.gain.linearRampToValueAtTime(vol, _audioCtx.currentTime + startDelay + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, _audioCtx.currentTime + startDelay + dur);
-    osc.start(_audioCtx.currentTime + startDelay);
-    osc.stop(_audioCtx.currentTime + startDelay + dur + 0.02);
+    try{ if(navigator.audioSession) navigator.audioSession.type='ambient'; }catch(e){}
+    _audioCtx = new (window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});
+    // Sortie : volume général → limiteur doux → haut-parleurs
+    const lim=_audioCtx.createDynamicsCompressor();
+    lim.threshold.value=-10; lim.knee.value=6; lim.ratio.value=6; lim.attack.value=0.002; lim.release.value=0.12;
+    _sonSortie=_audioCtx.createGain(); _sonSortie.gain.value=1;
+    _sonSortie.connect(lim); lim.connect(_audioCtx.destination);
+    // Petite réverbe (bruit qui décroît 0,45 s) pour les cloches seulement
+    const n=Math.floor(_audioCtx.sampleRate*0.45), ir=_audioCtx.createBuffer(2,n,_audioCtx.sampleRate);
+    for(let c=0;c<2;c++){ const d=ir.getChannelData(c); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3); }
+    const conv=_audioCtx.createConvolver(); conv.normalize=true; conv.buffer=ir;
+    _sonReverb=_audioCtx.createGain(); _sonReverb.gain.value=0.22;
+    _sonReverb.connect(conv); conv.connect(_sonSortie);
+  }catch(e){ _audioCtx=null; }
+  return _audioCtx;
+}
+// Les navigateurs démarrent l'audio « suspendu » : on le réveille au premier geste,
+// et au retour sur l'appli (Safari le met en pause en arrière-plan).
+['pointerdown','keydown','touchend'].forEach(t=>document.addEventListener(t,()=>{
+  if(!_soundEnabled) return;
+  const c=sonContexte(); if(c && c.state!=='running') c.resume().catch(()=>{});
+},{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && _audioCtx && _audioCtx.state!=='running' && _soundEnabled) _audioCtx.resume().catch(()=>{}); });
+
+/* Briques de synthèse. t = décalage en secondes depuis maintenant. */
+function sonNote({f, f2=null, type='triangle', t=0, dur=0.06, g=0.1, att=0.004, lp=2600, reverb=0}){
+  const c=_audioCtx, t0=c.currentTime+0.005+t;
+  const o=c.createOscillator(), v=c.createGain(), filtre=c.createBiquadFilter();
+  o.type=type; o.frequency.setValueAtTime(f,t0);
+  if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0+dur*0.7);
+  filtre.type='lowpass'; filtre.frequency.value=lp; filtre.Q.value=0.5;
+  v.gain.setValueAtTime(0.0001,t0);
+  v.gain.exponentialRampToValueAtTime(g, t0+att);
+  v.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.connect(filtre); filtre.connect(v); v.connect(_sonSortie);
+  if(reverb){ const s=c.createGain(); s.gain.value=reverb; v.connect(s); s.connect(_sonReverb); }
+  o.start(t0); o.stop(t0+dur+0.02);
+}
+// Cloche FM : rapport non entier, indice de modulation qui retombe
+function sonCloche({f, t=0, dur=0.38, g=0.07, ratio=3.5, indice=2.2, reverb=0.6}){
+  const c=_audioCtx, t0=c.currentTime+0.005+t;
+  const porteuse=c.createOscillator(), mod=c.createOscillator(), profondeur=c.createGain(), v=c.createGain();
+  porteuse.frequency.value=f; mod.frequency.value=f*ratio;
+  profondeur.gain.setValueAtTime(f*indice,t0); profondeur.gain.exponentialRampToValueAtTime(1,t0+dur);
+  mod.connect(profondeur); profondeur.connect(porteuse.frequency);
+  v.gain.setValueAtTime(0.0001,t0); v.gain.exponentialRampToValueAtTime(g,t0+0.004); v.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  porteuse.connect(v); v.connect(_sonSortie);
+  const s=c.createGain(); s.gain.value=reverb; v.connect(s); s.connect(_sonReverb);
+  porteuse.start(t0); mod.start(t0); porteuse.stop(t0+dur+0.02); mod.stop(t0+dur+0.02);
+}
+// Souffle très court (bruit filtré) : donne le « grain » d'un clic
+function sonSouffle({t=0, dur=0.012, f=3200, q=1.2, g=0.05}){
+  const c=_audioCtx, t0=c.currentTime+0.005+t, n=Math.ceil(c.sampleRate*dur);
+  const b=c.createBuffer(1,n,c.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  const src=c.createBufferSource(), bp=c.createBiquadFilter(), v=c.createGain();
+  src.buffer=b; bp.type='bandpass'; bp.frequency.value=f; bp.Q.value=q; v.gain.value=g;
+  src.connect(bp); bp.connect(v); v.connect(_sonSortie); src.start(t0);
+}
+
+/* La palette. Ré majeur pentatonique. */
+const N={ fa4:369.99, la4:440, re5:587.33, mi5:659.26, fa5:739.99, la5:880, si5:987.77, re6:1174.66, mi6:1318.51, la6:1760 };
+const DTMF={ haut:[852,1477], bas:[770,1336], jour:[697,1209] };   // touches 9, 5 et 1
+const SONS={
+  // Navigation semaine/jour : paire DTMF très brève, haute vers l'avant
+  nav:(o)=>{ const p=o?.dir<0?DTMF.bas:DTMF.haut; p.forEach(f=>sonNote({f,type:'sine',dur:0.045,g:0.063,att:0.003,lp:4000})); },
+  jour:(o)=>{ DTMF.jour.forEach(f=>sonNote({f:f*(o?.dir<0?0.94:1),type:'sine',dur:0.035,g:0.064,lp:4000})); },
+  // Sélection d'une carte : petit « pop » qui monte (descend pour retirer)
+  select:()=>{ sonSouffle({g:0.03}); sonNote({f:N.fa5,f2:N.re6,type:'triangle',dur:0.07,g:0.11}); },
+  deselect:()=>{ sonNote({f:N.re6,f2:N.fa5,type:'triangle',dur:0.06,g:0.1}); },
+  // Interrupteurs : deux notes, montée = activé, descente = coupé
+  on:()=>{ sonNote({f:N.re5,type:'square',dur:0.045,g:0.04,lp:2200}); sonNote({f:N.la5,type:'square',t:0.05,dur:0.06,g:0.044,lp:2200}); },
+  off:()=>{ sonNote({f:N.la5,type:'square',dur:0.045,g:0.04,lp:2000}); sonNote({f:N.re5,type:'square',t:0.05,dur:0.06,g:0.04,lp:1800}); },
+  // Feuilles et fenêtres : glissé doux, presque inaudible
+  ouvrir:()=>{ sonNote({f:N.fa5,f2:N.si5,type:'sine',dur:0.09,g:0.08,att:0.008}); },
+  fermer:()=>{ sonNote({f:N.si5,f2:N.fa5,type:'sine',dur:0.08,g:0.064,att:0.008}); },
+  // Enregistrer, ajouter une tâche, épingler un favori : deux notes qui montent
+  ajout:()=>{ sonNote({f:N.mi5,type:'triangle',dur:0.05,g:0.057}); sonNote({f:N.si5,type:'triangle',t:0.055,dur:0.08,g:0.057}); },
+  // Tâche faite : le son « héros », rare et satisfaisant (pop + cloche)
+  tache:()=>{ sonSouffle({g:0.035,f:2600}); sonNote({f:N.la5,f2:N.re6*1.2,type:'sine',dur:0.06,g:0.15}); sonCloche({f:N.re6,t:0.05,dur:0.42,g:0.09}); },
+  // Favori / examen épinglé : cloche claire
+  epingle:()=>{ sonCloche({f:N.la5,dur:0.4,g:0.14,ratio:2.8,indice:2.6}); },
+  // Chargement d'un favori, ouverture des examens : petit arpège montant
+  succes:()=>{ [N.re5,N.fa5,N.la5].forEach((f,i)=>sonNote({f,type:'triangle',t:i*0.06,dur:0.07,g:0.064})); },
+  // Suppression : chute courte et sourde, pas de dents de scie
+  suppr:()=>{ sonNote({f:N.la4,f2:N.fa4*0.8,type:'triangle',dur:0.1,g:0.16,lp:1400}); sonSouffle({g:0.02,f:900,dur:0.03}); },
+  // Erreur : tierce mineure descendante, carré étouffé (grave mais pas agressif)
+  erreur:()=>{ sonNote({f:N.la4,type:'square',dur:0.09,g:0.048,att:0.008,lp:900}); sonNote({f:N.fa4,type:'square',t:0.1,dur:0.14,g:0.048,att:0.008,lp:800}); },
+  // Synchro reçue : les deux tons d'un modem Bell 202
+  sync:()=>{ [1200,2200,1200].forEach((f,i)=>sonNote({f,type:'square',t:i*0.035,dur:0.03,g:0.038,lp:2600})); },
+  // Changement de thème : balayage qui monte
+  theme:()=>{ sonNote({f:N.re5,f2:N.re6,type:'sine',dur:0.16,g:0.11,att:0.01}); },
+};
+let _sonDernier={}, _sonDernierGlobal=0;
+function son(nom, opts){
+  if(!_soundEnabled || document.hidden || !SONS[nom]) return;
+  const t=performance.now();
+  if(t-(_sonDernier[nom]||0) < 70 || t-_sonDernierGlobal < 25) return;   // pas de rafale
+  _sonDernier[nom]=t; _sonDernierGlobal=t;
+  const c=sonContexte(); if(!c) return;
+  if(c.state!=='running') c.resume().catch(()=>{});
+  try{
+    // Volume général + légère variation pour ne jamais sonner « mécanique »
+    _sonSortie.gain.setValueAtTime(sonVolume()*(0.94+Math.random()*0.12), c.currentTime);
+    SONS[nom](opts);
   }catch(e){}
 }
 
-function soundNavWeek(dir){
-  // dir>0 = forward (pitch up), dir<0 = back (pitch down)
-  if(dir>0){
-    _playTone(440,'sine',0.07,0.07,0);
-    _playTone(550,'sine',0.07,0.06,0.07);
-  } else {
-    _playTone(550,'sine',0.07,0.07,0);
-    _playTone(440,'sine',0.07,0.06,0.07);
-  }
-}
-
-function soundNavDay(dir){
-  _playTone(dir>0?480:420,'sine',0.06,0.06);
-}
-
-function soundFavLoad(){
-  _playTone(523,'triangle',0.07,0.07,0);
-  _playTone(659,'triangle',0.07,0.06,0.08);
-  _playTone(784,'triangle',0.10,0.07,0.16);
-}
-
-function soundPin(){
-  _playTone(880,'sine',0.06,0.08,0);
-  _playTone(1046,'sine',0.08,0.07,0.07);
-}
-
-function soundToast(){
-  _playTone(392,'triangle',0.05,0.05);
-}
-
-function soundNowLineCross(){
-  // Soft chime when now-line crosses event boundary
-  _playTone(528,'sine',0.12,0.06,0);
-  _playTone(792,'sine',0.10,0.04,0.12);
-}
+/* Anciens noms, encore appelés ailleurs dans la page */
+function soundNavWeek(dir){ son('nav',{dir}); }
+function soundNavDay(dir){ son('jour',{dir}); }
+function soundFavLoad(){ son('succes'); }
+function soundPin(){ son('epingle'); }
+function soundToast(){ son('on'); }
+function soundNowLineCross(){ /* silence : événement automatique */ }
+function _playTone(){ /* ancien moteur retiré */ }
 
 
-// Resume AudioContext on first user gesture (browser policy)
-document.addEventListener('click', ()=>{ if(_audioCtx && _audioCtx.state==='suspended') _audioCtx.resume(); }, {once:true});
 
 // Patch navSemaine to add sound
 const _origNavSemaine = navSemaine;
 navSemaine = function(dir){
   soundNavWeek(dir);
-  _origNavSemaine(dir);
+  naviguerAnime(dir, ()=>_origNavSemaine(dir));
 };
 
 // Patch navJour to add sound
 const _origNavJour = navJour;
 navJour = function(dir){
   soundNavDay(dir);
-  _origNavJour(dir);
+  naviguerAnime(dir, ()=>_origNavJour(dir));
 };
 
 // Patch loadFav to add sound
@@ -8535,23 +8791,6 @@ loadFav = async function(i){
 };
 
 
-// Now-line crossing detection
-let _lastNowLineSide = {}; // eventKey -> 'before'|'during'|'after'
-function checkNowLineCrossings(){
-  const now = new Date();
-  Object.values(allEventsById).forEach(evs=>{
-    (evs||[]).forEach(ev=>{
-      const key = (ev.title||'') + ev.start.toISOString();
-      const state = now < ev.start ? 'before' : now < ev.end ? 'during' : 'after';
-      const prev = _lastNowLineSide[key];
-      if(prev && prev !== state && (prev==='before'||state==='before')){
-        soundNowLineCross();
-      }
-      _lastNowLineSide[key] = state;
-    });
-  });
-}
-setInterval(checkNowLineCrossings, window._ecoMode?90000:30000);
 
 /* Sound toggle — stored in localStorage */
 // Migration : une ancienne version écrivait dans 'ade-sound-enabled'.
@@ -8562,7 +8801,8 @@ setInterval(checkNowLineCrossings, window._ecoMode?90000:30000);
     localStorage.removeItem('ade-sound-enabled');
   }
 })();
-let _soundEnabled = localStorage.getItem('ade-sound') !== '0';
+// Désactivé par défaut : on l'active dans Paramètres → Sons
+let _soundEnabled = localStorage.getItem('ade-sound') === '1';
 
 function toggleSound(){
   _soundEnabled = !_soundEnabled;
@@ -8577,12 +8817,6 @@ function updateSoundBtn(){
   if(btnG){ btnG.textContent = icon; btnG.title = _soundEnabled ? 'Sons activés — cliquer pour couper' : 'Sons coupés — cliquer pour activer'; }
 }
 
-// Override _playTone to respect toggle
-const _realPlayTone = _playTone;
-window._playTone = function(freq, type, dur, vol, delay){
-  if(!_soundEnabled) return;
-  _realPlayTone(freq, type, dur, vol, delay);
-};
 
 /* ============================================================
    🎨 CUSTOM HEX COLOR PICKER
@@ -8743,85 +8977,49 @@ function printCalendar(){
 /* ============================================================
    🎵 SOUNDS EVERYWHERE — global micro-interaction sounds
    ============================================================ */
-// Tiny click tick for all buttons/cards
-function soundClick(){ window._playTone(660,'sine',0.04,0.045); }
-function soundHover(){ window._playTone(880,'sine',0.025,0.025); }
-function soundOpen(){ window._playTone(523,'triangle',0.06,0.055,0); window._playTone(659,'triangle',0.06,0.045,0.07); }
-function soundClose(){ window._playTone(659,'sine',0.05,0.045,0); window._playTone(440,'sine',0.07,0.04,0.06); }
-function soundToggleOn(){ window._playTone(440,'sine',0.05,0.05,0); window._playTone(550,'sine',0.06,0.05,0.06); window._playTone(660,'sine',0.07,0.055,0.12); }
-function soundToggleOff(){ window._playTone(660,'sine',0.05,0.05,0); window._playTone(440,'sine',0.07,0.045,0.07); }
-function soundSelect(){ window._playTone(528,'sine',0.05,0.06); }
-function soundDeselect(){ window._playTone(400,'sine',0.05,0.05); }
-function soundSearch(){ window._playTone(700,'triangle',0.04,0.04); }
-function soundTabSwitch(){ window._playTone(495,'sine',0.055,0.05,0); window._playTone(587,'sine',0.055,0.045,0.06); }
-function soundDelete(){ window._playTone(330,'sawtooth',0.08,0.05); }
-function soundSave(){ window._playTone(523,'triangle',0.06,0.06,0); window._playTone(784,'triangle',0.09,0.065,0.09); }
-function soundExamOpen(){ window._playTone(523,'sine',0.07,0.07,0); window._playTone(659,'sine',0.07,0.06,0.08); window._playTone(784,'sine',0.09,0.065,0.16); window._playTone(1046,'sine',0.1,0.06,0.25); }
-function soundDatePick(){ window._playTone(587,'triangle',0.055,0.06); }
-function soundError(){ window._playTone(220,'sawtooth',0.1,0.06,0); window._playTone(196,'sawtooth',0.1,0.055,0.1); }
+// Anciens noms (encore appelés ailleurs) → palette. Les clics ordinaires,
+// le survol et la saisie restent silencieux : trop fréquents (guide Microsoft :
+// « dans le doute, pas de son » ; pas de son sur les événements fréquents).
+function soundClick(){}
+function soundHover(){}
+function soundSearch(){}
+function soundOpen(){ son('ouvrir'); }
+function soundClose(){ son('fermer'); }
+function soundToggleOn(){ son('on'); }
+function soundToggleOff(){ son('off'); }
+function soundSelect(){ son('select'); }
+function soundDeselect(){ son('deselect'); }
+function soundTabSwitch(){}
+function soundDelete(){ son('suppr'); }
+function soundSave(){ son('ajout'); }
+function soundExamOpen(){ son('succes'); }
+function soundDatePick(){ son('jour',{dir:1}); }
+function soundError(){ son('erreur'); }
 
-// Wire sounds to existing interactive elements via event delegation
+// Un son seulement pour les actions qui changent quelque chose
 document.addEventListener('click', e=>{
   if(!_soundEnabled) return;
   const t = e.target;
-  // Card selection
-  if(t.closest('.card')){ soundSelect(); return; }
-  // Tab switch
-  if(t.closest('.tab')){ soundTabSwitch(); return; }
-  // Fav chip load
-  if(t.closest('.fav-chip') && !t.classList.contains('fav-del') && !t.classList.contains('fav-star')){ soundFavLoad(); return; }
-  if(t.classList.contains('fav-del')){ soundDelete(); return; }
-  if(t.classList.contains('fav-star')){ soundToggleOn(); return; }
-  // Pin btn
-  if(t.closest('.fav-pin-btn')){ soundOpen(); return; }
-  // Modal open/close
-  if(t.closest('.btn-main') && !t.id==='btn-voir'){ soundOpen(); return; }
-  if(t.closest('.btn-secondary') && t.textContent.includes('Annuler')){ soundClose(); return; }
-  if(t.closest('.custom-close') || t.closest('.stats-close') || t.closest('.exam-overlay') && t===e.currentTarget){ soundClose(); return; }
-  // Exam modal open
-  if(t.closest('.btn-exam') || t.closest('#btn-exam-fetch')){ soundExamOpen(); return; }
-  // Week note
-  if(t.closest('.week-note-btn')){ soundOpen(); return; }
-  // Exam pin
-  if(t.closest('.exam-pin-btn')){ soundPin(); return; }
-  // Date picker cells
-  if(t.classList.contains('dp-cell') && !t.classList.contains('dp-hdr') && !t.classList.contains('dp-empty')){ soundDatePick(); return; }
-  if(t.closest('.dp-nav-btn')){ soundClick(); return; }
-  // Cal today btn
-  if(t.closest('.cal-today-btn')){ soundDatePick(); return; }
-  // Delete/clear
-  if(t.closest('.btn-clear-sel')){ soundDelete(); return; }
-  // Checklist add
-  if(t.closest('.wn-add-btn')){ soundSave(); return; }
-  // Checklist toggle
-  if(t.closest('.wn-item') && t.type==='checkbox'){ t.checked?soundToggleOn():soundToggleOff(); return; }
-  // Save note
-  if(t.closest('.ev-note-save') || t.closest('button') && t.textContent.includes('Sauvegarder')){ soundSave(); return; }
-  // Theme swatch
-  if(t.closest('.theme-swatch')){ soundToggleOn(); return; }
-  // Generic small btns
-  if(t.closest('.btn-sm')){ soundClick(); return; }
-  // Pinned exam chip unpin
-  if(t.classList.contains('pec-unpin')){ soundDelete(); return; }
-  // Pinned exam chip navigate
-  if(t.closest('.pinned-exam-chip')){ soundDatePick(); return; }
-  // MBN buttons
-  if(t.closest('.mbn-btn')){ soundClick(); return; }
-  // Default fallback for nav icons
-  if(t.closest('.cal-nav-icon')){ soundClick(); return; }
+  if(!(t instanceof Element)) return;
+  // Carte de sélection : l'état n'a pas encore basculé (phase de capture)
+  const carte=t.closest('.card');
+  if(carte && !t.closest('.card-mail')){ carte.classList.contains('on') ? son('deselect') : son('select'); return; }
+  if(t.closest('.fav-del')){ son('suppr'); return; }
+  if(t.closest('.fav-star')){ son('on'); return; }
+  if(t.closest('.fav-chip')){ son('succes'); return; }
+  if(t.closest('.btn-clear-sel,.pec-unpin')){ son('suppr'); return; }
+  if(t.closest('.exam-pin-btn')){ son('epingle'); return; }
+  if(t.closest('.wn-add-btn')){ son('ajout'); return; }
+  if(t.closest('.wn-item') && t.type==='checkbox'){ son(t.checked?'tache':'off'); return; }
+  if(t.closest('.theme-swatch')){ son('theme'); return; }
+  if(t.closest('.dp-cell') && !t.closest('.dp-hdr,.dp-empty')){ son('jour',{dir:1}); return; }
+  if(t.closest('.cal-today-btn,.pinned-exam-chip')){ son('jour',{dir:1}); return; }
+  // Interrupteurs des paramètres (au moment du clic, la case a déjà basculé)
+  if(t.matches('.toggle input[type="checkbox"]')){ son(t.checked?'on':'off'); return; }
 }, true);
 
-// Search input sound
-document.querySelectorAll('.card-search').forEach(inp=>{
-  let _searchTimer;
-  inp.addEventListener('input', ()=>{
-    clearTimeout(_searchTimer);
-    _searchTimer = setTimeout(()=>soundSearch(), 200);
-  });
-});
-
-// Voir EDT button
-document.getElementById('btn-voir').addEventListener('click', ()=> soundOpen(), true);
+// Voir l'emploi du temps
+document.getElementById('btn-voir').addEventListener('click', ()=> son('succes'), true);
 
 
 // Set print date on cal-header
@@ -8881,13 +9079,36 @@ function onSoundToggleParams(checked){
   localStorage.setItem('ade-sound', checked ? '1' : '0');   // même clé que la lecture au démarrage
   updateSoundLabelParams();
   if(typeof updateSoundBtn === 'function') updateSoundBtn();
-  if(checked){ if(typeof soundToggleOn==='function') soundToggleOn(); }
+  if(checked){ const c=sonContexte(); if(c && c.state!=='running') c.resume().catch(()=>{}); son('on'); }
 }
 function updateSoundLabelParams(){
   const lbl = document.getElementById('sound-label-params');
   const tog = document.getElementById('sound-toggle-params');
   if(!lbl||!tog) return;
   lbl.textContent = tog.checked ? 'Sons activés' : 'Sons désactivés';
+  const v=localStorage.getItem('ade-sound-vol')||'normal', boite=document.getElementById('son-volume');
+  if(boite){
+    boite.classList.toggle('inactif', !tog.checked);
+    boite.querySelectorAll('[data-vol]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.vol===v?'true':'false'));
+  }
+}
+// Activer depuis un clic : la case d'abord (pour le libellé), puis l'audio
+// créé et réveillé DANS le geste, sinon le navigateur le garde bloqué.
+function sonActiverDepuisClic(){
+  if(!_soundEnabled){ const t=document.getElementById('sound-toggle-params'); if(t) t.checked=true; onSoundToggleParams(true); }
+  const c=sonContexte(); if(c && c.state!=='running') c.resume().catch(()=>{});
+}
+function sonChoisirVolume(v){
+  localStorage.setItem('ade-sound-vol', v);
+  sonActiverDepuisClic();
+  updateSoundLabelParams();
+  son('ajout');
+}
+// Toute la palette, une note après l'autre, pour régler le volume à l'oreille
+function sonEssai(){
+  sonActiverDepuisClic();
+  const suite=[['select'],['on'],['nav',{dir:1}],['nav',{dir:-1}],['ajout'],['tache'],['epingle'],['sync'],['suppr'],['erreur']];
+  suite.forEach(([n,o],i)=>setTimeout(()=>{ _sonDernier={}; _sonDernierGlobal=0; son(n,o); }, i*520));
 }
 function onExamToggleParams(checked){
   localStorage.setItem('ade-exam-auto', checked ? '1' : '0');
@@ -9358,6 +9579,16 @@ function onEcoToggle(checked){
   }
 }
 
+function choisirMotion(v){
+  try{ v==='auto' ? localStorage.removeItem('ade-motion') : localStorage.setItem('ade-motion', v); }catch(e){}
+  appliquerMotion(); majChoixMotion();
+}
+function majChoixMotion(){
+  let v='auto'; try{ v=localStorage.getItem('ade-motion')||'auto'; }catch(e){}
+  document.querySelectorAll('[data-motion-choix]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.motionChoix===v?'true':'false'));
+}
+majChoixMotion();
+
 function onRobotAnimToggle(checked){
   window._robotAnimEnabled = checked;
   const container = document.getElementById('corner-creature');
@@ -9564,6 +9795,8 @@ PX_ICONS.chevU   = [...PX_ICONS.chevD].concat(Array(16-PX_ICONS.chevD.length).fi
 { const g=[...PX_ICONS.chevD].concat(Array(16-PX_ICONS.chevD.length).fill('')).map(r=>r.padEnd(16,'.'));
   PX_ICONS.chevR = Array.from({length:16},(_,y)=>Array.from({length:16},(_,x)=>g[x][y]).join(''));
   PX_ICONS.chevL = PX_ICONS.chevR.map(r=>r.split('').reverse().join('')); }
+// Crayon (modifier une tâche)
+PX_ICONS.pencil = ['','...........##...','..........####..','.........#.###..','........###.#...','.......###.#....','......###.#.....','.....###.#......','....###.#.......','...###.#........','...##.#.........','...#.#..........','...##...........'];
 // Liste à cocher (onglet « À faire »)
 PX_ICONS.todo = ['','.###............','.#.#..########..','.###............','','.###............','.#.#..######....','.###............','','.###............','.#.#..########..','.###............'];
 
@@ -9671,8 +9904,9 @@ function pxRemplacer(racine){
    MOTION — cascade des cours, éclats de pixels, sauts d'icônes,
    dévoilement circulaire du thème
    ============================================================ */
-const pxCalme = () => document.documentElement.classList.contains('eco') ||
-  matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Seul le réglage système « réduire les animations » coupe les mouvements.
+// Le mode éco ne coupe que ce qui coûte cher (flou, boucles, décor).
+const pxCalme = () => document.documentElement.dataset.motion==='reduit';
 
 // Les cours n'entrent en cascade que lorsque la semaine affichée change,
 // pas à chaque re-rendu (horloge, notes…).
@@ -9741,16 +9975,32 @@ function pxHop(el){
     s.classList.remove('px-hop'); void s.getBoundingClientRect(); s.classList.add('px-hop');
   });
 }
+// Saut d'icône à chaque appui (léger). Les éclats sont réservés aux actions
+// qui comptent (tâche faite, favori enregistré) : sur chaque bouton, l'effet
+// s'usait en quelques jours (« plus c'est fréquent, plus c'est sobre »).
 document.addEventListener('click',e=>{
   const cible=e.target.closest('button, .card, .fav-chip, .tab, [onclick]');
-  if(!cible) return;
-  pxHop(cible);
-  const x=e.clientX||(cible.getBoundingClientRect().left+cible.offsetWidth/2);
-  const y=e.clientY||(cible.getBoundingClientRect().top+cible.offsetHeight/2);
-  if(cible.matches('.btn-main, .fav-chip, .fav-emoji-btn')) pxBurst(x,y);
-  // Une carte qu'on vient de cocher (pas décocher)
-  else if(cible.matches('.card')) setTimeout(()=>{ if(cible.classList.contains('on')) pxBurst(x,y); },0);
+  if(cible) pxHop(cible);
 },true);
+
+/* Navigation animée : la grille glisse dans le sens de la navigation.
+   View Transitions (Chrome, Safari 18, Firefox 144) ; sinon rendu direct. */
+let _vtNav=null;
+function naviguerAnime(dir, faire){
+  if(!document.startViewTransition || pxCalme() || document.hidden || document.getElementById('cal-body')?.style.display!=='block'){ faire(); return; }
+  _vtNav?.skipTransition?.();                       // navigation rapide : on saute à la fin
+  document.documentElement.dataset.nav = dir>0 ? 'avant' : 'arriere';
+  try{
+    _vtNav=document.startViewTransition(()=>{ faire(); });
+    _vtNav.finished.finally(()=>{ if(_vtNav) delete document.documentElement.dataset.nav; _vtNav=null; });
+  }catch(e){ delete document.documentElement.dataset.nav; faire(); }
+}
+
+// Rebond d'un compteur quand sa valeur change
+function bump(el){
+  if(!el || pxCalme()) return;
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
 
 // Bascule clair/sombre : le nouveau thème s'ouvre en cercle depuis l'interrupteur
 function basculerThemeAnime(sombre){
@@ -10667,7 +10917,7 @@ function taEcrire(liste){
   _taIndex=null;
   taMajCompteurs();
   const d=document.getElementById('ta-dock');
-  if(d && !d.hidden) setTimeout(()=>taRendreListe(d), 0);
+  if(d && !d.hidden && !_taGele) setTimeout(()=>taRendreListe(d), 0);
   if(typeof updateNotesPanel==='function') updateNotesPanel();
 }
 function taOcc(title,start){ return (title||'')+'|'+(start instanceof Date?start.toISOString():new Date(start).toISOString()); }
@@ -10694,26 +10944,106 @@ function taOuvertesPour(title, start){
   }
   return _taIndex.get(taOcc(title,start))||0;
 }
+/* Animations des tâches : la ligne cochée se barre (CSS), lâche des éclats,
+   puis se replie avant de rejoindre « Faites ». Une nouvelle tâche glisse
+   en place ; une tâche supprimée se replie. */
+let _taGele=false, _taNouveau=null;
+const taElems=id=>[...document.querySelectorAll(`.ta-item[data-id="${id}"]`)];
+function taReplier(el){
+  if(typeof pxCalme==='function' && pxCalme()) return Promise.resolve();
+  const h=el.offsetHeight; el.classList.add('ta-part');
+  const a=el.animate([{height:h+'px',opacity:1},{height:'0px',opacity:0,paddingTop:'0px',paddingBottom:'0px',borderBottomWidth:'0px'}],
+    {duration:180,easing:'cubic-bezier(.3,0,.8,.15)',fill:'forwards'});
+  // Filet : si l'onglet est en arrière-plan, l'animation peut ne jamais finir
+  return Promise.race([a.finished.catch(()=>{}), new Promise(r=>setTimeout(r,260))]);
+}
+// Ouvertes pour aujourd'hui ou en retard (pour la célébration)
+function taOuvertesDuJour(l){
+  const fin=new Date(); fin.setHours(23,59,59,999);
+  return l.filter(t=>!t.fait && t.due && new Date(t.due)<=fin).length;
+}
+// Moment rare : la dernière tâche du jour est faite
+function taFeter(x,y){
+  if(typeof pxCalme==='function' && pxCalme()){ showToast('Rien d\'autre pour aujourd\'hui ✓'); return; }
+  const cx=x??innerWidth/2, cy=y??innerHeight/2;
+  [0,90,180].forEach((t,i)=>setTimeout(()=>pxBurst(cx+(i-1)*24, cy-i*10), t));
+  setTimeout(()=>{ if(typeof son==='function'){ _sonDernier={}; son('succes'); } }, 380);
+  const b=document.createElement('div'); b.className='fete'; b.setAttribute('role','status');
+  b.textContent='Rien d\'autre pour aujourd\'hui ✓';
+  document.body.appendChild(b); setTimeout(()=>b.remove(), 3000);
+}
 function taAjouter(o){
   const l=taLire();
-  l.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), t:o.t, fait:false, mat:o.mat||null,
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  l.push({id, t:o.t, fait:false, mat:o.mat||null,
           due:o.due||null, occ:o.occ||null, jourSeul:!!o.jourSeul, cree:new Date().toISOString()});
+  if(typeof son==='function') son('ajout');
+  _taNouveau=id; setTimeout(()=>{ if(_taNouveau===id) _taNouveau=null; }, 800);
   taEcrire(l);
   if(document.getElementById('cal-body')?.style.display==='block') renderCalendar();
 }
 function taBasculer(id){
   const l=taLire(), t=l.find(x=>x.id===id); if(!t) return;
+  const avant=taOuvertesDuJour(l);
   t.fait=!t.fait; t.faitLe=t.fait?new Date().toISOString():undefined;
-  taEcrire(l);
+  if(typeof son==='function') son(t.fait?'tache':'off');
+  _taGele=true; taEcrire(l); _taGele=false;          // pas de redessin pendant l'animation
   if(typeof haptic==='function') haptic(t.fait?[8,4,8]:[4]);
-  taRafraichirVues(600);
+  const els=taElems(id);
+  els.forEach(e=>{ e.classList.toggle('fait', t.fait); const c=e.querySelector('input'); if(c) c.checked=t.fait; });
+  if(t.fait){
+    const c=els.find(e=>e.offsetParent)?.querySelector('input'), r=c?.getBoundingClientRect();
+    if(r && typeof pxBurst==='function') pxBurst(r.left+r.width/2, r.top+r.height/2);
+    if(avant>0 && taOuvertesDuJour(l)===0) setTimeout(()=>taFeter(r?r.left+r.width/2:null, r?r.top:null), 260);
+  }
+  // Dans les listes, la ligne se replie avant de changer de groupe ; dans la fiche elle reste
+  setTimeout(()=>{
+    Promise.all(els.filter(e=>e.closest('.ta-liste')).map(taReplier)).then(()=>taRafraichirVues(0));
+  }, t.fait?520:120);
+}
+/* Modifier une tâche sur place : le texte devient un champ. Entrée ou clic
+   ailleurs = enregistrer, Échap = annuler. On peut aussi y taper « #R302 »
+   ou « jeudi » pour changer la matière ou l'échéance, comme à la création. */
+function taModifier(id, btn){
+  const item=btn?.closest('.ta-item'), t=taLire().find(x=>x.id===id);
+  if(!item || !t || item.classList.contains('edition')) return;
+  item.classList.add('edition');
+  const label=item.querySelector('label'); label.hidden=true;
+  const champ=document.createElement('input');
+  champ.type='text'; champ.className='ta-edit'; champ.value=t.t; champ.maxLength=140;
+  champ.setAttribute('aria-label','Modifier la tâche'); champ.enterKeyHint='done'; champ.autocomplete='off';
+  label.after(champ);
+  champ.focus(); champ.setSelectionRange(champ.value.length, champ.value.length);
+  let fini=false;
+  const terminer=(garder)=>{
+    if(fini) return; fini=true;
+    const v=champ.value.trim();
+    if(garder && v && v!==t.t){
+      const l=taLire(), x=l.find(y=>y.id===id);
+      if(x){
+        const p=taAnalyser(v,{mat:x.mat});
+        x.t=p.texte;
+        if(v.includes('#')) x.mat=p.mat;
+        if(p.dateDonnee){ x.due=p.due; x.occ=p.occ; x.jourSeul=p.jourSeul; }
+        if(typeof son==='function') son('ajout');
+        taEcrire(l);
+      }
+    }
+    taRafraichirVues(0);
+  };
+  champ.addEventListener('keydown',e=>{
+    if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); terminer(true); }
+    else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); terminer(false); }
+  });
+  champ.addEventListener('blur',()=>terminer(true));
 }
 function taSupprimer(id){
   const l=taLire(), i=l.findIndex(x=>x.id===id); if(i<0) return;
   const [retiree]=l.splice(i,1);
-  taEcrire(l);
-  taRafraichirVues(0);
-  taToastAnnuler('Tâche supprimée', ()=>{ const l2=taLire(); l2.splice(Math.min(i,l2.length),0,retiree); taEcrire(l2); taRafraichirVues(0); });
+  if(typeof son==='function') son('suppr');
+  _taGele=true; taEcrire(l); _taGele=false;
+  Promise.all(taElems(id).map(taReplier)).then(()=>taRafraichirVues(0));
+  taToastAnnuler('Tâche supprimée', ()=>{ const l2=taLire(); l2.splice(Math.min(i,l2.length),0,retiree); _taNouveau=retiree.id; taEcrire(l2); taRafraichirVues(0); });
 }
 // Les vues ouvertes (fiche, liste) se redessinent ; la case cochée a le
 // temps de s'animer avant que la tâche ne descende dans « Faites ».
@@ -10734,10 +11064,11 @@ function taItemHtml(t){
   if(t.mat) meta.push(escapeHtml(t.mat));
   if(t.due){ const d=new Date(t.due); meta.push(taJour(d)+(t.jourSeul?'':' · '+fmtTime(d))); }
   const retard = !t.fait && t.due && new Date(t.due) < new Date() && !memeJourParis(new Date(t.due), new Date());
-  return `<div class="ta-item${t.fait?' fait':''}${retard?' retard':''}" data-id="${t.id}">
+  return `<div class="ta-item${t.fait?' fait':''}${retard?' retard':''}${t.id===_taNouveau?' ta-entre':''}" data-id="${t.id}">
     <input type="checkbox" id="ta-${t.id}" ${t.fait?'checked':''} onchange="taBasculer('${t.id}')">
     <label for="ta-${t.id}"><span class="ta-texte">${escapeHtml(t.t)}</span>${meta.length?`<span class="ta-meta">${meta.join(' · ')}</span>`:''}</label>
-    <button type="button" class="ta-suppr" onclick="taSupprimer('${t.id}')" aria-label="Supprimer « ${escapeHtml(t.t)} »"><svg class="px" data-px="trash" aria-hidden="true"></svg></button>
+    <button type="button" class="ta-suppr ta-modif" onclick="taModifier('${t.id}', this)" aria-label="Modifier « ${escapeHtml(t.t)} »" title="Modifier"><svg class="px" data-px="pencil" aria-hidden="true"></svg></button>
+    <button type="button" class="ta-suppr" onclick="taSupprimer('${t.id}')" aria-label="Supprimer « ${escapeHtml(t.t)} »" title="Supprimer"><svg class="px" data-px="trash" aria-hidden="true"></svg></button>
   </div>`;
 }
 
@@ -10863,8 +11194,10 @@ function ouvrirDockAFaire(focus){
 }
 function fermerAFaire(){
   const d=document.getElementById('ta-dock');
-  if(d){ d.hidden=true; d.innerHTML=''; }
-  document.body.classList.remove('ta-dock-on');
+  const fin=()=>{ if(d){ d.hidden=true; d.innerHTML=''; d.classList.remove('sort'); } document.body.classList.remove('ta-dock-on'); };
+  // Sortie courte (160 ms) avant de libérer la colonne
+  if(d && !d.hidden && !(typeof pxCalme==='function' && pxCalme())){ d.classList.add('sort'); setTimeout(fin,150); }
+  else fin();
   document.querySelectorAll('.tb-afaire').forEach(b=>b.setAttribute('aria-pressed','false'));
   try{ localStorage.removeItem('ade-ta-dock'); }catch(e){}
 }
@@ -10945,7 +11278,11 @@ function taToastAnnuler(msg, annuler){
 function taMajCompteurs(){
   const lim=new Date(); lim.setHours(0,0,0,0); lim.setDate(lim.getDate()+2);
   const n=taLire().filter(t=>!t.fait && t.due && new Date(t.due)<lim).length;
-  document.querySelectorAll('.ta-badge').forEach(b=>{ b.textContent=n>9?'9+':String(n); b.hidden=!n; });
+  document.querySelectorAll('.ta-badge').forEach(b=>{
+    const t=n>9?'9+':String(n), change=!b.hidden && b.textContent!==t;
+    b.textContent=t; b.hidden=!n;
+    if(change && typeof bump==='function') bump(b);
+  });
   // Pastille sur l'icône de l'appli installée (Chrome/Edge bureau, Safari)
   try{ if('setAppBadge' in navigator){ n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } }catch(e){}
 }
@@ -10980,7 +11317,7 @@ const SY_ETAT='ade-sync';            // {code, v, empreinte, date} — propre à
 const SY_META='ade-sync-meta';       // {clé: date de dernière modification locale}
 const SY_SUPPR='ade-taches-suppr';   // {id: date} tâches supprimées
 // Réglages d'appareil (mode éco, curseur, robot, onglet…) volontairement exclus
-const SY_CLES=['ade-dark','ade-color','ade-custom-hex','ade-sound','ade-exam-auto',
+const SY_CLES=['ade-dark','ade-color','ade-custom-hex','ade-exam-auto',
                'ade-favorites','ade-fav-default','ade-pinned-exams','ade-subject-hues-v2'];
 const SY_PREFIXES=['ade-evnote-','ade-weeknote-','ade-weektasks-'];
 const syConcerne=k=>SY_CLES.includes(k)||SY_PREFIXES.some(p=>k.startsWith(p));
@@ -11137,6 +11474,7 @@ async function synchroniser(manuel){
   const e=syEtat(); if(!e?.code) return;
   if(!navigator.onLine){ if(manuel) showToast('Pas de réseau : synchro au retour de la connexion'); return; }
   if(_syEnCours) return _syEnCours;
+  setTimeout(syRendre,0);                 // barres de signal pendant l'échange
   _syEnCours=(async()=>{
     const k=await syCles(e.code), url=`${CF_WORKER}sync/${k.id}`;
     let recu=false;
@@ -11170,7 +11508,7 @@ async function synchroniser(manuel){
   })();
   try{
     const recu=await _syEnCours;
-    if(recu) showToast('Synchronisé : changements reçus de l\'autre appareil');
+    if(recu){ showToast('Synchronisé : changements reçus de l\'autre appareil'); if(typeof son==='function') son('sync'); }
     else if(manuel) showToast('Synchronisé');
   }catch(err){
     const msg=err?.name==='TypeError' ? 'serveur injoignable' : String(err.message||err);
@@ -11267,7 +11605,10 @@ function syRendre(){
     box.querySelector('#sy-saisie')?.addEventListener('keydown',ev=>{ if(ev.key==='Enter') syLier(ev.target.value); });
     return;
   }
-  box.innerHTML=`<div class="sy-statut${e.erreur?' erreur':''}">${e.erreur?'Dernière tentative échouée : '+escapeHtml(e.erreur):'Synchronisé '+syDepuis(e.date)}</div>
+  const enCours=!!_syEnCours;
+  // Clin d'œil réseau : 4 barres de signal qui s'allument en saccades pendant l'échange
+  const signal=`<span class="sy-signal${enCours?' actif':''}${e.erreur?' coupe':''}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>`;
+  box.innerHTML=`<div class="sy-statut${e.erreur?' erreur':''}">${signal}${enCours?'Synchronisation…':e.erreur?'Dernière tentative échouée : '+escapeHtml(e.erreur):'Synchronisé '+syDepuis(e.date)}</div>
     <div class="sy-ligne-actions">
       <button type="button" class="btn-main" onclick="synchroniser(true)">Synchroniser maintenant</button>
       <button type="button" class="btn-sm" onclick="syMontrerQR()">Lier un autre appareil</button>
