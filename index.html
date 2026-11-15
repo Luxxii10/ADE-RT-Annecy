@@ -10333,7 +10333,9 @@ function ouvrirSelectionPopup(){
   const g=document.querySelector('.page-inner .glass'); if(!g || g.classList.contains('sel-popup')) return;
   const voile=document.createElement('div'); voile.className='sel-voile'; voile.id='sel-voile';
   voile.addEventListener('click',()=>fermerSelectionPopup(false));
-  document.body.appendChild(voile);
+  // Même conteneur que la fenêtre : .page crée sa propre pile d'affichage,
+  // un voile ajouté à <body> passait au-dessus de la fenêtre et bloquait les clics
+  g.before(voile);
   if(!g.querySelector('.sel-popup-tete')){
     const t=document.createElement('div'); t.className='sel-popup-tete';
     t.innerHTML=`<span class="sel-popup-titre">Changer d'emploi du temps</span>
