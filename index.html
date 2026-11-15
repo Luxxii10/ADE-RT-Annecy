@@ -3117,9 +3117,13 @@ header.topbar .toggle-wrap{position:static;}
 /* Liste dans les paramètres */
 .hl-aide{margin:2px 0 8px;line-height:1.45;}
 .hl-liste{display:flex;flex-direction:column;}
-.hl-ligne{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
-.hl-ligne-nom{flex:1;min-width:0;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hl-ligne{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--border);}
+/* Nom en entier (sur plusieurs lignes s'il le faut), date en dessous :
+   sur téléphone, la ligne unique ne laissait presque rien au nom */
+.hl-ligne-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.hl-ligne-nom{font-size:14px;font-weight:500;color:var(--text);line-height:1.3;overflow-wrap:anywhere;}
 .hl-ligne-meta{font:400 11px var(--f-mono);color:var(--muted);white-space:nowrap;}
+.hl-ligne .btn-sm{flex-shrink:0;min-height:36px;}
 .hl-ligne-meta.garde{color:var(--ok);}
 .hl-vide{font-size:12.5px;color:var(--muted);padding:6px 0;}
 
@@ -10292,8 +10296,10 @@ function rendreListeHorsLigne(){
   const quand=t=>{ const d=new Date(t); return `${d.getDate()}/${d.getMonth()+1} ${fmtTime(d)}`; };
   boite.innerHTML=idx.map(x=>`
     <div class="hl-ligne">
-      <span class="hl-ligne-nom" title="${x.nom}">${x.nom}</span>
-      <span class="hl-ligne-meta${x.garde?' garde':''}">${x.garde?'gardé':'récent'} · ${quand(x.date)}</span>
+      <span class="hl-ligne-txt">
+        <span class="hl-ligne-nom">${escapeHtml(x.nom)}</span>
+        <span class="hl-ligne-meta${x.garde?' garde':''}">${x.garde?'gardé':'récent'} · ${quand(x.date)}</span>
+      </span>
       <button class="btn-sm" onclick="hlOuvrir('${x.cle}')">Ouvrir</button>
       <button class="btn-sm" onclick="${x.garde?`hlRetirer('${x.cle}')`:`basculerHorsLigne(hlIdsDe('${x.cle}'))`}">${x.garde?'Retirer':'Garder'}</button>
     </div>`).join('');
