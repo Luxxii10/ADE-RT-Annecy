@@ -793,6 +793,9 @@ h1 em{font-style:normal;color:var(--acc);}
 .pull-refresh.ready .pull-refresh-spinner{transform:rotate(180deg);}
 .pull-refresh.loading .pull-refresh-spinner{animation:spin .7s linear infinite;}
 @media(min-width:701px){.pull-refresh{display:none;}}
+/* Un seul « tirer pour actualiser » : celui de l'appli. Sans ça, Chrome
+   Android lançait aussi le sien (rechargement complet) en même temps. */
+@media(max-width:700px){ html,body{overscroll-behavior-y:contain;} }
 
 /* inner scroll container — text always readable, scrollable if event is tiny */
 .ev-inner{
@@ -5276,7 +5279,9 @@ function _renderCalendarInterne(){
         _evDataStore.set(evKey, {title:rawTitle,loc,timeStr,desc:ev.desc||'',prof,start:ev.start.toISOString(),end:ev.end.toISOString()});
         const noteK=makeNoteKey(rawTitle,ev.start.toISOString());
         const hasNote=!!localStorage.getItem(noteK);
-        const openTasks=taOuvertesPour(rawTitle, ev.start);
+        // Le module « À faire » est dans un script plus bas : avec un EDT par
+        // défaut en cache, le calendrier peut s'afficher avant qu'il soit chargé
+        const openTasks=typeof taOuvertesPour==='function' ? taOuvertesPour(rawTitle, ev.start) : 0;
         const hasTasks=openTasks>0;
         // Cours en cours : badge + barre de progression live
         const isCurrent = isToday && ev.start<=now && now<ev.end;
@@ -5361,7 +5366,10 @@ async function triggerPullRefresh(){
     if(label) label.textContent='Actualisation…';
   }
   haptic([10,30,10]);
-  try{ await refetchEdt(); showToast('✅ Emploi du temps actualisé'); }
+  // EDT affiché : on recharge seulement l'EDT. Sinon : toute la page
+  // (le rechargement natif du navigateur est coupé, voir overscroll-behavior).
+  if(document.getElementById('cal-body')?.style.display!=='block'){ location.reload(); return; }
+  try{ await refetchEdt(); if(typeof synchroniser==='function') synchroniser(false); showToast('✅ Emploi du temps actualisé'); }
   catch(e){ showToast("⚠️ Impossible d'actualiser"); }
   resetPullIndicator();
 }
@@ -5369,8 +5377,8 @@ async function triggerPullRefresh(){
 function initPullToRefresh(){
   document.addEventListener('touchstart', e=>{
     if(!isMobile){ _ptrPulling=false; return; }
-    const calBody=document.getElementById('cal-body');
-    if(!calBody || calBody.style.display!=='block'){ _ptrPulling=false; return; }
+    // Pas pendant une feuille, une fenêtre ou la recherche
+    if(e.target.closest('.fl,.fl-voile,[id$="-overlay"],.pal-voile') || document.documentElement.classList.contains('fl-ouverte')){ _ptrPulling=false; return; }
     if(window.scrollY>5 || e.target.closest('input,textarea,select')){ _ptrPulling=false; return; }
     _ptrStartY=e.touches[0].clientY;
     _ptrPulling=true; _ptrTriggered=false;
@@ -10946,6 +10954,8 @@ function taMajCompteurs(){
   },700));
 })();
 document.addEventListener('DOMContentLoaded',taMajCompteurs);
+// Si le calendrier s'est affiché avant ce script, il n'avait pas les compteurs de tâches
+if(document.getElementById('cal-body')?.style.display==='block') setTimeout(()=>renderCalendar(),0);
 
 /* ============================================================
    SYNCHRONISATION ENTRE APPAREILS (sans compte, sans base de données)
