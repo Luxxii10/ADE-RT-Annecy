@@ -10693,7 +10693,10 @@ const FL_MOBILE=matchMedia('(max-width:700px)');
 const FL_COURBE='cubic-bezier(.32,.72,0,1)';
 let _fl=null;
 
-function flOuvrir(html, {label='', x=0, y=0, onClose=null}={}){
+// grand:true → une seule hauteur (grande) : pour les listes qu'on fait défiler
+// tout de suite (« À faire »), le cran intermédiaire obligeait à tirer la
+// feuille vers le haut avant de pouvoir parcourir les tâches.
+function flOuvrir(html, {label='', x=0, y=0, onClose=null, grand=false}={}){
   const remplace=_fl;
   if(_fl) flFermer({remplacer:true});
   const voile=document.createElement('div'); voile.className='fl-voile';
@@ -10703,7 +10706,7 @@ function flOuvrir(html, {label='', x=0, y=0, onClose=null}={}){
   el.innerHTML=`<div class="fl-poignee" role="button" tabindex="0" aria-label="Agrandir ou réduire la fiche"></div><div class="fl-corps">${html}</div>`;
   document.body.append(voile, el);
   const mobile=FL_MOBILE.matches;
-  _fl={el, voile, onClose, mobile, retour:document.activeElement, pousse:remplace?.pousse||false, off:0, H:0, offMoyen:0};
+  _fl={el, voile, onClose, mobile, grand, retour:document.activeElement, pousse:remplace?.pousse||false, off:0, H:0, offMoyen:0};
   voile.addEventListener('click',()=>flFermer());
   el.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.stopPropagation(); flFermer(); } });
   if(mobile){
@@ -10740,7 +10743,7 @@ function flMesurer(){
   if(!_fl) return;
   _fl.H=_fl.el.offsetHeight;
   const moyen=Math.min(_fl.H, Math.round(innerHeight*.6));
-  _fl.offMoyen=_fl.H-moyen;
+  _fl.offMoyen=_fl.grand ? 0 : _fl.H-moyen;   // pas de cran intermédiaire
 }
 function flAller(etat, anim){
   if(!_fl || !_fl.mobile) return;
@@ -11309,7 +11312,7 @@ function ouvrirAFaire(){
     if(d && !d.hidden) fermerAFaire(); else ouvrirDockAFaire(true);
     return;
   }
-  const el=flOuvrir(taVueHtml('flFermer()'),{label:'À faire', x:innerWidth/2-180, y:80});
+  const el=flOuvrir(taVueHtml('flFermer()'),{label:'À faire', x:innerWidth/2-180, y:80, grand:true});
   el._afaire=true;
   taLierVue(el);
   requestAnimationFrame(()=>{ if(_fl?.mobile) flMesurer(); else flRecaler(); });
