@@ -2,7 +2,7 @@
 <html lang="fr" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Emploi du temps — Labo RT Annecy</title>
 <!-- PWA : installable et utilisable hors ligne (voir sw.js et README.md) -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -4075,6 +4075,61 @@ var SAISON_CONFETTIS = ['#c8102e','#ffd75e','#1f7a55','#ffffff','#82c4ff','#e8b9
 /* Bonnet pixel (15 × 8) : sert au logo de la barre du haut et au splash */
 var SAISON_BONNET = ["....RRRRR......","...RRRRRRRR....","..RRRRRRRRRRR..","..RRRRRRR..RRW.",".RRRRRRRR...WWW",".RRRRRRRR....W.","WWWWWWWWWW.....","WgWWgWWWgW....."];
 var SAISON_BONNET_PAL = {R:'#c8102e', W:'#ffffff', g:'#d9e2ec'};
+
+/* ── Neige posée sur les panneaux : 3 sprites pixel, en clair et en sombre ──
+   W neige, H reflet, s ombre (dessous), i glace, t pointe de stalactite.
+   Le contour « O » est ajouté automatiquement au-dessus de la neige (mode clair :
+   sinon la neige blanche disparaît sur un panneau blanc). */
+var SAISON_NEIGE = {
+  a: ["......WWW................WWWW...",
+      "....WWWHWWW......WW....WWWWHWWW.",
+      "..WWWWWWWWWWW..WWWWWW.WWWWWWWWWW",
+      "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+      "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+      "sWWWWWsssWWWWWWWWsssWWWWWWsssWWs",
+      ".sssss...ssssssss...ssssss...ss."],
+  b: [".........................................................",
+      ".........................................................",
+      ".........................................................",
+      ".........................................................",
+      ".........................................................",
+      ".........................................................",
+      ".........iii....................ii...............iii.....",
+      ".........iii....................ii...............ii......",
+      "..........ii....................i................ii......",
+      "..........ii....................t.................i......",
+      "..........i.......................................t......",
+      "..........t.............................................."],
+  c: ["................WWWW..............",
+      "..............WWWHWWW.............",
+      ".............WWWWWWWWW............",
+      "..............................W...",
+      ".............................WWW..",
+      "...........................ssWWWss",
+      "..............................ss.."]
+};
+(function(){
+  var PAL = {
+    clair:{W:'#f7fbff',H:'#ffffff',s:'#c2d8ee',i:'#d4e7f8',t:'#a9c8e6',O:'#b7cfe6'},
+    sombre:{W:'#e6eef6',H:'#ffffff',s:'#6f8fb0',i:'#cfe2f3',t:'#9fc0e3',O:null}
+  };
+  function svg(rows, pal){
+    var g = rows.map(function(r){ return r.split(''); }), h = g.length, w = 0, x, y;
+    g.forEach(function(r){ w = Math.max(w, r.length); });
+    g.unshift(Array(w+1).join('.').split(''));                 // une rangée en plus pour le contour
+    if(pal.O) for(y=1;y<=h;y++) for(x=0;x<w;x++)
+      if((g[y][x]==='W'||g[y][x]==='H') && g[y-1][x]==='.') g[y-1][x]='O';
+    var s = '';
+    g.forEach(function(r,yy){ var xx=0; while(xx<r.length){ var k=r[xx]; if(!pal[k]){ xx++; continue; } var n=1; while(r[xx+n]===k) n++;
+      s += '<rect x="'+xx+'" y="'+yy+'" width="'+n+'" height="1" fill="'+pal[k]+'"/>'; xx+=n; } });
+    return 'url("data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+(h+1)+'" viewBox="0 0 '+w+' '+(h+1)+'" shape-rendering="crispEdges">'+s+'</svg>')+'")';
+  }
+  var st = document.documentElement.style;
+  ['a','b','c'].forEach(function(k){
+    st.setProperty('--neige-'+k, svg(SAISON_NEIGE[k], PAL.clair));
+    st.setProperty('--neige-'+k+'-s', svg(SAISON_NEIGE[k], PAL.sombre));
+  });
+})();
 </script>
 <style>
 /* ── Jetons de saison : décoratifs uniquement ── */
@@ -4131,17 +4186,39 @@ html[data-saison="noel"] .tb-id{ position:relative; }
 /* Survol du logo : le bonnet gigote (ressort amorti, une fois) */
 html[data-motion="plein"] .tb-id:hover .s-bonnet{ animation:s-gigote .7s cubic-bezier(.3,0,.3,1); }
 @keyframes s-gigote{ 0%{transform:rotate(-6deg)} 18%{transform:rotate(-15deg)} 40%{transform:rotate(3deg)} 60%{transform:rotate(-10deg)} 80%{transform:rotate(-4deg)} 100%{transform:rotate(-6deg)} }
-/* Neige posée sur le haut des cartes */
-html[data-saison="noel"] .glass,
-html[data-saison="noel"] .mobile-bottom-nav{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='6' shape-rendering='crispEdges'%3E%3Cpath fill='%23c9dcee' d='M0 3h32v1H0zM3 1h1v2H3zM12 2h1v1h-1zM20 1h1v2h-1zM29 2h1v1h-1z'/%3E%3Cpath fill='%23fff' d='M0 0h32v3H0zM4 3h7v1H4zM21 3h6v1h-6z'/%3E%3Cpath fill='%23c9dcee' d='M4 4h7v1H4zM21 4h6v1h-6z'/%3E%3C/svg%3E") !important;
-  background-repeat:repeat-x !important; background-position:0 0 !important; background-size:64px 12px !important;
+/* Neige posée sur TOUS les panneaux : 3 couches pixel de périodes différentes (64, 114, 68 px)
+   qui se chevauchent → le bord ne se répète jamais visiblement. Sprites générés plus haut
+   (SAISON_NEIGE) : congères bosselées + reflets, stalactites, petits paquets qui débordent. */
+html[data-saison="noel"] :is(.glass,.mobile-bottom-nav,.modal,.modal-box,section.fl,.custom-panel,.pal,.ta-dock,
+  .cal-overflow-menu,.next-course-inner,.notes-panel,.datepicker-popup,.params-section-card,.semaine-charge,.pinned-banner-inner){
+  background-image:var(--neige-a), var(--neige-b), var(--neige-c) !important;
+  background-repeat:repeat-x, repeat-x, repeat-x !important;
+  background-position:0 0, 29px 0, 53px 0 !important;
+  background-size:64px 16px, 114px 26px, 68px 16px !important;
+  background-origin:border-box !important;
 }
-html[data-saison="noel"][data-theme="dark"] .glass,
-html[data-saison="noel"][data-theme="dark"] .mobile-bottom-nav{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='6' shape-rendering='crispEdges'%3E%3Cpath fill='%235d7a99' d='M0 3h32v1H0zM3 1h1v2H3zM12 2h1v1h-1zM20 1h1v2h-1zM29 2h1v1h-1z'/%3E%3Cpath fill='%23dfe8f1' d='M0 0h32v3H0zM4 3h7v1H4zM21 3h6v1h-6z'/%3E%3Cpath fill='%235d7a99' d='M4 4h7v1H4zM21 4h6v1h-6z'/%3E%3C/svg%3E") !important;
+html[data-saison="noel"][data-theme="dark"] :is(.glass,.mobile-bottom-nav,.modal,.modal-box,section.fl,.custom-panel,.pal,.ta-dock,
+  .cal-overflow-menu,.next-course-inner,.notes-panel,.datepicker-popup,.params-section-card,.semaine-charge,.pinned-banner-inner){
+  background-image:var(--neige-a-s), var(--neige-b-s), var(--neige-c-s) !important;
 }
-html[data-saison="noel"] .mobile-bottom-nav{ background-size:48px 9px !important; }
+/* La neige a sa propre bande (bord haut transparent de 9 px, peint par le fond du panneau) :
+   elle se pose AU-DESSUS du contenu au lieu de passer sur les titres */
+html[data-saison="noel"] :is(.glass,.modal,.modal-box,section.fl,.custom-panel,.pal,.ta-dock,
+  .cal-overflow-menu,.next-course-inner,.notes-panel,.datepicker-popup,.params-section-card,.semaine-charge,.pinned-banner-inner){
+  border-top-width:9px !important; border-top-color:transparent !important; }
+@media(min-width:701px){ html[data-saison="noel"] .next-course-bar{ border-top:9px solid transparent !important; }
+  html[data-saison="noel"] .next-course-bar .next-course-inner{ border-top-width:1px !important; border-top-color:var(--border) !important; } }
+/* PC : la carte « prochain cours » est un panneau dans un panneau → neige sur celui du dessus */
+@media(min-width:701px){
+  html[data-saison="noel"] .next-course-bar{ background-image:var(--neige-a), var(--neige-b), var(--neige-c) !important;
+    background-repeat:repeat-x, repeat-x, repeat-x !important; background-position:0 0, 29px 0, 53px 0 !important;
+    background-size:64px 16px, 114px 26px, 68px 16px !important; background-origin:border-box !important; }
+  html[data-saison="noel"][data-theme="dark"] .next-course-bar{ background-image:var(--neige-a-s), var(--neige-b-s), var(--neige-c-s) !important; }
+  html[data-saison="noel"] .next-course-bar .next-course-inner.next-course-inner{ background-image:none !important; }   /* doit battre la règle « sombre » */
+}
+/* Petits panneaux et panneaux imbriqués : la même neige, en plus fin (pixel 1,5 px au lieu de 2) */
+html[data-saison="noel"] :is(.glass .next-course-inner,.params-section-card,.mobile-bottom-nav,.cal-overflow-menu,.datepicker-popup){
+  background-size:48px 12px, 86px 20px, 51px 12px !important; }
 /* « Aujourd'hui » : pastille houx + petite étoile d'or */
 html[data-saison="noel"] .cal-day-header.today .day-num,
 html[data-saison="noel"] .cal-day-header.is-today .day-num{ background:var(--s-houx) !important; color:#fff !important; position:relative; }
@@ -4212,46 +4289,6 @@ html[data-saison="noel"] .s-compte{ display:inline-flex; align-items:center; gap
   font:700 12px var(--f-mono); color:var(--s-houx-txt); background:color-mix(in oklab,var(--s-houx) 9%,transparent); border:1px dashed color-mix(in oklab,var(--s-houx) 45%,transparent); }
 .s-compte svg{ width:14px; height:16px; }
 @media(max-width:900px){ html[data-saison="noel"] .s-compte{ display:none; } }
-/* Bouton calendrier de l'Avent */
-.tb-avent{ display:none; }
-html[data-saison="noel"] .tb-avent{ display:inline-grid; place-items:center; position:relative; width:40px; height:40px; border-radius:var(--r-md,12px);
-  border:1px solid var(--border); background:var(--surf); cursor:pointer; padding:0; flex:none; transition:transform .12s, border-color .2s; }
-html[data-saison="noel"] .tb-avent:hover{ border-color:var(--line); }
-html[data-saison="noel"] .tb-avent:active{ transform:scale(.92); }
-.tb-avent svg{ width:20px; height:20px; }
-.tb-avent .s-pastille{ position:absolute; top:5px; right:5px; width:8px; height:8px; border-radius:50%; background:var(--s-houx); box-shadow:0 0 0 2px var(--surf); }
-html[data-motion="plein"] .tb-avent .s-pastille{ animation:s-pastille 1.8s ease-in-out infinite; }
-@keyframes s-pastille{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.25); } }
-html[data-motion="plein"] .tb-avent.dispo svg{ animation:s-agite 2.8s ease-in-out infinite; transform-origin:50% 90%; }
-@keyframes s-agite{ 0%,82%,100%{ transform:none; } 85%{ transform:rotate(-12deg); } 88%{ transform:rotate(10deg); } 91%{ transform:rotate(-7deg); } 94%{ transform:rotate(4deg); } }
-@media(max-width:700px){ html[data-saison="noel"] .tb-avent{ width:36px; height:36px; } }
-/* Calendrier de l'Avent (dans une feuille) */
-.s-avent{ padding:4px 16px calc(20px + env(safe-area-inset-bottom,0px)); }
-.s-avent h3{ margin:0 0 2px; font:800 20px var(--f-ui); letter-spacing:-.02em; }
-.s-avent .s-sous{ margin:0 0 12px; color:var(--muted); font-size:13px; }
-.s-avent .s-scene{ display:flex; align-items:flex-end; gap:14px; margin-bottom:12px; }
-.s-avent .s-sapin{ width:96px; height:112px; flex:none; }
-.s-avent .s-billet{ flex:1; min-height:84px; border-radius:var(--r-md,12px); padding:12px 14px; font-size:14px; line-height:1.45;
-  background:color-mix(in oklab,var(--s-or) 10%,var(--surf)); border:1px dashed color-mix(in oklab,var(--s-or) 50%,transparent); }
-.s-avent .s-billet b{ display:block; font:700 11px var(--f-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--s-or-txt); margin-bottom:4px; }
-.s-portes{ display:grid; grid-template-columns:repeat(6,1fr); gap:7px; }
-@media(max-width:420px){ .s-portes{ grid-template-columns:repeat(4,1fr); } }
-.s-porte{ position:relative; aspect-ratio:1; border:0; padding:0; background:transparent; perspective:420px; cursor:pointer; min-height:44px; }
-.s-porte .s-dedans{ position:absolute; inset:0; display:grid; place-items:center; border-radius:10px; background:color-mix(in oklab,var(--s-givre) 35%,var(--surf2)); }
-.s-porte .s-dedans svg{ width:24px; height:27px; }
-.s-porte .s-volet{ position:absolute; inset:0; border-radius:10px; transform-origin:0 50%; backface-visibility:hidden; display:grid; place-items:center;
-  font:800 16px var(--f-mono); color:#fff; background:var(--s-houx);
-  background-image:repeating-linear-gradient(135deg, transparent 0 7px, rgb(255 255 255 / .09) 7px 14px);
-  box-shadow:inset 0 0 0 2px rgb(255 255 255 / .18); transition:transform .75s cubic-bezier(.3,1.4,.5,1); }
-.s-porte:nth-child(3n+1) .s-volet{ background-color:#1f5c45; } .s-porte:nth-child(4n+2) .s-volet{ background-color:#0b6cb5; }
-.s-porte:nth-child(5n+3) .s-volet{ background-color:#8a6420; }
-.s-porte.ouverte .s-volet{ transform:rotateY(-112deg); }
-.s-porte.verrou .s-volet{ filter:grayscale(.6) brightness(.8); cursor:not-allowed; }
-.s-porte.verrou{ cursor:not-allowed; }
-.s-porte.aujourdhui .s-volet{ box-shadow:inset 0 0 0 2px #ffd75e, 0 0 0 2px color-mix(in oklab,#ffd75e 60%,transparent); }
-html[data-motion="plein"] .s-porte.aujourdhui:not(.ouverte) .s-volet{ animation:s-toque 2.6s ease-in-out infinite; }
-@keyframes s-toque{ 0%,80%,100%{ transform:none; } 84%{ transform:rotateY(-14deg); } 90%{ transform:rotateY(-4deg); } }
-html[data-motion="reduit"] .s-porte .s-volet{ transition:opacity .2s; } html[data-motion="reduit"] .s-porte.ouverte .s-volet{ transform:none; opacity:0; }
 /* Guirlande miniature sous l'en-tête du jour */
 html[data-saison="noel"] .cal-day-header.today{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='6' shape-rendering='crispEdges'%3E%3Cpath fill='%2335504a' d='M0 0h24v1H0z'/%3E%3Cpath fill='%23e23a4f' d='M3 1h2v3H3z'/%3E%3Cpath fill='%23ffd75e' d='M11 1h2v3h-2z'/%3E%3Cpath fill='%2342b883' d='M19 1h2v3h-2z'/%3E%3C/svg%3E") !important;
@@ -4290,14 +4327,116 @@ html[data-saison="noel"] .px-burst{ width:7px; height:7px; clip-path:polygon(43%
 /* Tirer pour actualiser : un flocon qui tourne */
 html[data-saison="noel"] .pull-refresh-spinner{ font-size:0; }
 html[data-saison="noel"] .pull-refresh-spinner::before{ content:"❄" / ""; font-size:18px; color:var(--s-givre); }
-/* Cadeau qui s'ouvre (tâche faite, porte de l'Avent) */
+/* Cadeau qui s'ouvre (tâche faite, traîneau) */
 .s-cadeau{ position:fixed; left:0; top:0; width:36px; height:36px; pointer-events:none; z-index:9998; }
 .s-cadeau svg{ position:absolute; left:0; width:36px; height:auto; }
 
 /* Impression : aucune décoration */
 @media print{ html[data-saison="noel"] header.topbar::before, html[data-saison="noel"] header.topbar::after, #s-neige, .s-bonnet, .tb-neige,
-  .s-plus, .tb-avent, .s-compte{ display:none !important; }
+  .s-plus, .s-compte{ display:none !important; }
   html[data-saison="noel"] body, html[data-saison="noel"] .glass{ background-image:none !important; } }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     RESPONSIVE TÉLÉPHONE — voir reports/Responsive mobile agréable PWA.md
+     Objectif : l'emploi du temps visible dès l'ouverture (avant : 674 px
+     d'interface au-dessus de la grille sur un 390×844), rien qui déborde à
+     320 px, cibles ≥ 44 px au doigt, rien caché sous la barre du bas ou l'encoche.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<style>
+:root{ --nav-h:0px; --kb:0px; }
+.coi-tel{ display:none !important; }
+/* Toasts : jamais plus larges que l'écran */
+.toast{ max-width:calc(100vw - 32px); white-space:normal !important; text-align:center; }
+/* Panneaux restants en vh → unités qui suivent les barres du navigateur et le clavier */
+html .pal{ max-height:min(80dvh, calc(100dvh - var(--kb) - 24px)) !important; }
+html .custom-panel.params-panel{ max-height:100dvh !important; }
+html .notes-panel{ max-height:70dvh !important; }
+html .fl.fl-pop{ max-height:min(80dvh,620px) !important; }
+/* La neige passe sous la barre du bas et le bouton « Aujourd'hui » */
+#s-neige{ z-index:490 !important; }
+/* Cours courts : on garde heure, salle et titre ; le prof saute plutôt que d'être coupé */
+.cal-event.ev-court .ev-prof{ display:none !important; }
+.cal-event .ev-title{ overflow-wrap:normal; hyphens:auto; }
+
+@media(max-width:700px){
+  :root{ --nav-h:calc(79px + env(safe-area-inset-bottom,0px)); }
+  .coi-tel{ display:flex !important; }
+
+  /* Encoche / barre d'état (viewport-fit=cover + status bar translucide) */
+  html header.topbar{ padding-top:max(8px, env(safe-area-inset-top)) !important;
+    padding-left:max(12px, env(safe-area-inset-left)) !important; padding-right:max(12px, env(safe-area-inset-right)) !important; }
+  html[data-saison="noel"] header.topbar{ margin-bottom:12px !important; }
+
+  /* En-tête du calendrier sur UNE ligne : ‹ titre › ··· (le reste passe dans « ··· ») */
+  html .cal-header{ flex-wrap:nowrap !important; gap:4px !important; padding:8px !important; }
+  html .cal-actions-zone{ order:0 !important; flex:0 0 auto !important; width:auto !important; }
+  html .cal-header-actions > :is(#btn-fav-cal,#btn-hors-ligne,.cal-nav-icon,.freshness-badge){ display:none !important; }
+  html .cal-today-btn{ display:none !important; }
+  html .cal-title-btn{ min-height:44px; }
+  html .cal-overflow-menu{ right:0; left:auto; min-width:250px; max-height:max(220px, calc(100dvh - var(--nav-h) - 330px)); overflow:auto; overscroll-behavior:contain; }
+  html .cal-overflow-item{ min-height:48px; font-size:14px; }
+  /* Heures de la semaine : dans le menu « ··· » (gain : 53 px) */
+  html #week-stats-bar{ display:none !important; }
+
+  /* Carte « en cours / prochain cours » compacte (180 → ~110 px) */
+  html .next-course-bar{ padding:0 !important; margin:6px 0 8px !important; }
+  html .next-course-inner{ padding:10px 14px !important; row-gap:0 !important; column-gap:12px !important;
+    grid-template-areas:"etat chrono" "salle chrono" "cours heures" "prog prog" !important; }
+  html .nc-salle{ font-size:22px !important; margin-top:2px !important; }
+  html .nc-val{ font-size:24px !important; }
+  html .nc-ensuite{ display:none !important; }
+
+  /* Favoris : une seule ligne qui défile au doigt, au lieu d'une puce par ligne */
+  body.edt-on .fav-bar{ flex-wrap:nowrap !important; padding:6px 10px !important; gap:8px !important; min-height:0 !important; }
+  body.edt-on .fav-bar .fav-label{ display:none !important; }
+  body.edt-on .fav-chips{ flex-wrap:nowrap !important; overflow-x:auto; scrollbar-width:none; min-width:0;
+    -webkit-mask:linear-gradient(90deg,#000 86%,transparent); mask:linear-gradient(90deg,#000 86%,transparent); }
+  body.edt-on .fav-chips::-webkit-scrollbar{ display:none; }
+  body.edt-on .fav-chip{ flex:none; }
+  html .sel-resume{ padding:6px 10px !important; }
+
+  /* Onglets des jours : toute la largeur */
+  html .cal-day-tabs{ display:flex; gap:6px; padding:6px 8px !important; }
+  html .cal-day-tab{ flex:1 1 0 !important; min-width:0 !important; min-height:48px !important; }
+
+  /* Lisibilité : 11 px minimum pour les étiquettes, 11,5–12 px pour les données */
+  html :is(.wst-chip,.wst-btn-stats,.cal-day-tab .dt-day,#freshness-text,#labo-txt){ font-size:11px !important; }
+  html .type-badge{ font-size:10.5px !important; }
+  html .cal-event :is(.ev-time,.ev-prof){ font-size:11.5px !important; }
+  html .cal-event .ev-prof{ opacity:.85 !important; }
+  html .ev-live-badge{ font-size:11px !important; }
+  /* Salle sur 2 lignes au lieu d'être coupée */
+  html .cal-event .ev-loc{ white-space:normal !important; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+  /* Tout ce qui flotte en bas se cale sur la vraie hauteur de la barre du bas */
+  html .toast{ bottom:calc(var(--nav-h) + 12px) !important; z-index:9500 !important; }
+  html .fab-today{ bottom:calc(var(--nav-h) + 10px) !important; min-height:44px; padding:12px 18px !important; }
+  html :is(.bandeau-installer,.bandeau-maj,.ta-toast){ bottom:calc(var(--nav-h) + 8px) !important; }
+  html .bandeau-installer{ z-index:510 !important; }
+  html .notes-panel{ bottom:var(--nav-h) !important; }
+  html .s-pingouin{ bottom:calc(var(--nav-h) + 2px) !important; }
+  html .bandeau-maj{ max-width:calc(100vw - 24px); }
+  /* Clavier virtuel : les fenêtres du bas remontent au-dessus */
+  html [id$="-overlay"].open{ padding-bottom:var(--kb) !important; }
+}
+
+/* Au doigt : 44 px minimum, petits contrôles agrandis sans changer le dessin */
+@media(pointer:coarse){
+  html :is(.cal-nav,.cal-overflow-btn,.fc-fermer,.params-close-btn,.custom-close,.modal-x,.tb-neige,.sr-modifier,.fav-pin-btn,.btn-sm,.hl-garder){ min-height:44px !important; }
+  html :is(.cal-nav,.cal-overflow-btn,.fc-fermer,.params-close-btn,.custom-close,.modal-x,.tb-neige){ min-width:44px !important; }
+  html :is(.fc-chip,.jf-btn,.saison-choix button){ min-height:40px !important; }
+  html .fav-chip{ min-height:40px; padding-top:0 !important; padding-bottom:0 !important; }
+  html .fav-chip :is(.fav-star,.fav-del){ display:inline-grid; place-items:center; min-width:28px; min-height:38px; opacity:1 !important; font-size:15px !important; }
+}
+
+/* Téléphone en paysage : la semaine défile de côté au lieu d'écraser 10 colonnes de 64 px */
+@media (orientation:landscape) and (max-height:500px) and (min-width:701px){
+  html #cal-body{ overflow-x:auto !important; overscroll-behavior-x:contain; }
+  html #cal-body > .cal-grid{ min-width:1180px !important; }
+  html header.topbar{ padding-left:max(16px, env(safe-area-inset-left)) !important; padding-right:max(16px, env(safe-area-inset-right)) !important; }
+  html .page{ padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+}
 </style>
 <body>
 
@@ -4578,7 +4717,6 @@ try{ matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', a
       <span>Installer</span>
     </button>
     <span class="s-compte" id="s-compte" aria-live="off"></span>
-    <button class="tb-avent" id="btn-avent" type="button" onclick="ouvrirAvent()" title="Calendrier de l'Avent" aria-label="Calendrier de l'Avent"></button>
     <button class="tb-neige" id="btn-neige" type="button" aria-pressed="false" onclick="basculerNeige()" title="Faire neiger (raccourci N)" aria-label="Faire neiger">
       <svg viewBox="0 0 9 9" aria-hidden="true" fill="currentColor"><path d="M4 0h1v9H4zM0 4h9v1H0zM1 1h1v1H1zM7 1h1v1H7zM1 7h1v1H1zM7 7h1v1H7zM2 2h1v1H2zM6 2h1v1H6zM2 6h1v1H2zM6 6h1v1H6zM3 0h3v1H3zM3 8h3v1H3zM0 3h1v3H0zM8 3h1v3H8z"/></svg>
     </button>
@@ -4798,6 +4936,22 @@ try{ matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', a
                 </button>
                 <button class="cal-overflow-item" onclick="closeCalOverflow();shareToday()">
                   <span class="coi-icon">📤</span> Partager ma journée
+                </button>
+                <!-- Téléphone : les actions de la barre passent dans ce menu (une seule ligne d'en-tête) -->
+                <button class="cal-overflow-item coi-tel" onclick="closeCalOverflow();basculerFavoriCal()">
+                  <span class="coi-icon"><svg class="px" data-px="star" aria-hidden="true" focusable="false"></svg></span> <span id="coi-fav-txt">Favori</span>
+                </button>
+                <button class="cal-overflow-item coi-tel" onclick="closeCalOverflow();basculerHorsLigne()">
+                  <span class="coi-icon"><svg class="px" data-px="save" aria-hidden="true" focusable="false"></svg></span> Garder hors ligne
+                </button>
+                <button class="cal-overflow-item coi-tel" onclick="closeCalOverflow();openStatsModal()">
+                  <span class="coi-icon">📊</span> Heures de la semaine
+                </button>
+                <button class="cal-overflow-item coi-tel" onclick="closeCalOverflow();refetchEdt()">
+                  <span class="coi-icon"><svg class="px" data-px="refresh" aria-hidden="true" focusable="false"></svg></span> Recharger
+                </button>
+                <button class="cal-overflow-item coi-tel" onclick="closeCalOverflow();masquerCalendar()">
+                  <span class="coi-icon">✕</span> Fermer l'emploi du temps
                 </button>
               </div>
             </div>
@@ -6150,7 +6304,7 @@ function _renderCalendarInterne(){
         const ariaEv=[`${day.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric'})} ${timeStr}`, title, ctype!=='Autre'?ctype:'', salleShort?`salle ${salleShort}`:'', prof,
                       isNE?'non encadré':'', isExam?'examen':'', isCurrent?'en cours':'',
                       hasNote?'avec note':'', openTasks?`${openTasks} tâche${openTasks>1?'s':''}`:''].filter(Boolean).join(', ');
-        html+=`<div class="cal-event ${cc}${isNE?' ev-ne':''}${isExam?' ev-exam':''}${isCurrent?' ev-current':''}${isPast?' ev-past':''}"
+        html+=`<div class="cal-event ${cc}${isNE?' ev-ne':''}${isExam?' ev-exam':''}${isCurrent?' ev-current':''}${isPast?' ev-past':''}${height<96?' ev-court':''}"
           style="--evh:${hue};position:absolute;left:2px;right:2px;top:${Math.max(0,top)}px;height:${height}px"
           data-evkey="${evKey}" role="button" tabindex="0" aria-label="${escapeHtml(ariaEv)}"
           onclick="showEvPopupByKey(event,${evKey})">
@@ -7221,6 +7375,7 @@ async function loadFav(i){
 function deleteFav(i){
   const favs=loadFavorites();
   const name=favs[i]?.name||'';
+  const retire=favs[i], defAvant=getDefaultIdx();
   favs.splice(i,1);
   saveFavorites(favs);
   // fix default index
@@ -7228,7 +7383,10 @@ function deleteFav(i){
   if(def===i) setDefaultIdx(-1);
   else if(def>i) setDefaultIdx(def-1);
   renderFavChips();
-  showToast(`🗑 "${name}" supprimé`);
+  // Suppression en un tap (cible petite, facile à toucher par erreur) : on laisse 5 s pour annuler
+  if(retire && typeof taToastAnnuler==='function') taToastAnnuler(`« ${name} » supprimé`, ()=>{
+    const l=loadFavorites(); l.splice(i,0,retire); saveFavorites(l); setDefaultIdx(defAvant); renderFavChips(); });
+  else showToast(`🗑 "${name}" supprimé`);
 }
 
 function openPinModal(){
@@ -11289,6 +11447,7 @@ function majBoutonFavCal(){
   btn.setAttribute('aria-pressed', i>=0?'true':'false');
   btn.querySelector('.hl-garder-txt').textContent = i>=0 ? 'En favori' : 'Favori';
   btn.title = i>=0 ? 'Dans les favoris · cliquer pour le retirer' : 'Épingler cette sélection dans les favoris';
+  const t=document.getElementById('coi-fav-txt'); if(t) t.textContent = i>=0 ? 'Retirer des favoris' : 'Ajouter aux favoris';
 }
 function basculerFavoriCal(){
   if(!selected.size) return;
@@ -11545,7 +11704,7 @@ function fcHtml(data, encodedData){
       </div>
       <button class="fc-fermer" onclick="flFermer()" aria-label="Fermer"><svg class="px" data-px="close" aria-hidden="true"></svg></button>
     </div>
-    <h2 class="fc-titre">${escapeHtml(titre)}</h2>
+    <h2 class="fc-titre">${escapeHtml(String(titre).replace(/^\s*[-–—·:]\s*/,''))}</h2>
     <div class="fc-quand">${quand}${rel}</div>
     <div class="fc-lignes">
       ${salle?`<div class="fc-ligne"><svg class="px" data-px="loc" aria-hidden="true"></svg><span class="fc-ligne-val salle">${escapeHtml(salle)}</span>
@@ -12730,7 +12889,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 </script>
 
-<!-- ═══ NOËL+ : sprites, boules, traîneau, pingouin, Avent, ciel, animations fêtes ═══
+<!-- ═══ NOËL+ : sprites, boules, traîneau, pingouin, ciel, animations fêtes ═══
      Voir reports/Noël plus festif et animations.md. Règle : rien ne bouge au-dessus du texte ;
      plus un élément bouge, plus il est rare ; tout s'arrête en mouvement réduit. -->
 <script>
@@ -12749,7 +12908,6 @@ const SP={
   pingouin2:["...RRRR.....","..RRRRRRW...","..WWWWWW....","..KKKKKK....",".KKWWWWKK...",".KWKWWKWK...",".KWWOOWWK...","KKWWWWWWKK..","KKWWWWWWKK..",".KWWWWWWK...",".KWWWWWWK...","..KKKKKK....","...OO.OO...."],
   bonhomme:["....KKKKK.....","....KKKKK.....","...KKKKKKK....","....wWWWw.....","...wWKWKWw....","...WWWOOWW....","....wWWWw.....","..RRRRRRRRR...","...wRWWWWw....","..wWWWKWWWWw..",".wWWWWWWWWWWw.",".WWWWWKWWWWWW.",".WWWWWWWWWWWW.",".wWWWWKWWWWWw.","..wWWWWWWWWw..","...wwwwwwww..."],
   sapinIcone:["....Y....","...YYY...","....G....","...GGG...","..GGRGG..","...GGG...","..GGGGG..",".GGYGGRG.","GGGGGGGGG","....T...."],
-  cadeauIcone:["..R...R..",".R.R.R.R.","..RRRRR..","LLLLRLLLL","LLLLRLLLL",".BBBRBBB.",".BBBRBBB.",".BBBRBBB.",".DDDRDDD."],
 };
 const PAL_C={ Y:'#e8b923', R:'#c8102e', W:'#ffffff', w:'#c9dcee', K:'#1b2333', O:'#f28c28', G:'#2e8b57', T:'#7a4a22',
   L:'#1f7a55', B:'#2e9e6e', D:'#1f5c45' };
@@ -12868,7 +13026,7 @@ function sTraineau(){
 }
 
 /* ── Le pingouin traverse le bas de l'écran, s'arrête pour dire bonjour ── */
-const PHRASES=['Joyeuses fêtes !','Bon courage pour les partiels ❄','Pense à ton chocolat chaud ☕','Plus que quelques cours !','Brrr… il fait froid en salle C251','Tu as ouvert ta case du jour ? 🎁'];
+const PHRASES=['Joyeuses fêtes !','Bon courage pour les partiels ❄','Pense à ton chocolat chaud ☕','Plus que quelques cours !','Brrr… il fait froid en salle C251','Joyeux Noël à toute la promo 🎄'];
 function sPingouin(){
   if(!SAISON.on || sCalme() || document.hidden || document.querySelector('.s-pingouin')) return;
   const a=document.activeElement; if(a && /INPUT|TEXTAREA/.test(a.tagName)) return;
@@ -12913,58 +13071,6 @@ function sCompte(){
   el.innerHTML=sPix(SP.sapinIcone,PAL_C)+`<span>${txt}</span>`;
 }
 
-/* ── Calendrier de l'Avent : 24 cases, une par jour, jamais de « corvée » (les jours manqués restent ouvrables) ── */
-const AVENT_MSG=["Le premier jour de décembre : prends un chocolat chaud entre deux TP ☕","Astuce : épingle tes examens pour les voir en haut de l'EDT 📌","Le savais-tu ? Le premier sapin décoré connu date de 1510, en Lettonie 🎄","Pause de 10 min = cerveau plus frais. Promis.","Le lac d'Annecy ne gèle presque jamais en entier ❄","Saint-Nicolas aujourd'hui : un pain d'épices pour la peine 🍪","Mets tes révisions dans « À faire », ça soulage la tête ✓","« Jingle Bells » a d'abord été écrit pour Thanksgiving 🔔","Un TP qui marche du premier coup ? C'est ça, la magie de Noël ✨","Hydrate-toi, même en hiver 💧","Plus que deux semaines : tu tiens le bon bout 💪","Tape « neige » n'importe où dans l'appli… ❄","Le flocon de neige a toujours 6 branches. Toujours.","Envoie l'EDT à un pote perdu : bouton Partager 🤝","Fun fact : le Père Noël ferait ~1 800 visites par seconde 🦌","Range ton bureau, ton futur toi te remercie 🧹","Clique sur une boule de la guirlande 😉","Le pingouin de l'appli s'appelle Bit. Dis-lui bonjour 🐧","Dernière ligne droite avant les vacances !","Prépare ta playlist de Noël 🎶","Le solstice d'hiver : à partir de demain, les jours rallongent ☀️","Les vacances approchent, souffle un peu 🛋","Veille de veille de Noël : vérifie tes cadeaux 🎁","C'est le 24 ! Joyeux réveillon à toute la promo 🎄"];
-const AVENT_ORDRE=[7,18,3,22,11,1,15,9,24,5,13,20,2,17,10,23,6,14,4,21,12,19,8,16];
-function aventJour(){ const md=SAISON.md; if(md>=1201&&md<=1224) return md-1200; if(md>=1225||md<=106) return 24; return SAISON.choix==='on'?24:0; }
-function aventOuvertes(){ try{ return JSON.parse(localStorage.getItem('ade-avent')||'[]'); }catch(e){ return []; } }
-function sSapin(ouvertes){
-  // Sapin 24×28 dessiné à la main ; chaque case ouverte accroche une boule à une place fixe
-  const W=24,H=28,g=[]; for(let y=0;y<H;y++){ g.push(Array(W).fill('.')); }
-  const etage=(y0,y1,l0,l1)=>{ for(let y=y0;y<=y1;y++){ const l=Math.round(l0+(l1-l0)*(y-y0)/Math.max(1,y1-y0)); for(let x=12-l;x<12+l;x++) g[y][x]=((x+y)%7===0)?'g':'G'; } };
-  etage(3,8,1,5); etage(7,14,3,8); etage(13,21,5,11); etage(20,24,7,12);
-  for(let y=25;y<28;y++) for(let x=10;x<14;x++) g[y][x]='T';
-  [[11,0],[12,0],[10,1],[11,1],[12,1],[13,1],[11,2],[12,2]].forEach(([x,y])=>g[y][x]='Y');
-  const places=[[12,5],[10,8],[14,9],[8,11],[12,11],[16,12],[6,14],[10,14],[14,15],[18,15],[5,17],[9,18],[13,17],[17,18],[7,20],[11,21],[15,20],[19,21],[4,22],[8,23],[12,23],[16,23],[20,23],[14,6]];
-  const cols=['R','Y','B','W','P','O'];
-  ouvertes.forEach(j=>{ const p=places[(j-1)%24]; if(p){ const c=cols[j%cols.length]; g[p[1]][p[0]]=c; } });
-  return sPix(g.map(r=>r.join('')),{G:'#2e8b57',g:'#1f6b43',T:'#7a4a22',Y:'#e8b923',R:'#e23a4f',B:'#4a9be0',W:'#ffffff',P:'#c06fd8',O:'#f28c28'});
-}
-function majBoutonAvent(){
-  const b=document.getElementById('btn-avent'); if(!b) return;
-  const j=aventJour(), o=aventOuvertes(), dispo=j>0 && !o.includes(j);
-  b.innerHTML=sPix(SP.cadeauIcone,PAL_C)+(dispo?'<span class="s-pastille" aria-hidden="true"></span>':'');
-  b.classList.toggle('dispo',dispo);
-  b.setAttribute('aria-label',"Calendrier de l'Avent"+(dispo?' : une case à ouvrir':''));
-}
-function ouvrirAvent(){
-  const j=aventJour(), o=aventOuvertes();
-  const portes=AVENT_ORDRE.map(n=>{ const ouverte=o.includes(n), verrou=n>j;
-    return `<button type="button" class="s-porte${ouverte?' ouverte':''}${verrou?' verrou':''}${n===j?' aujourdhui':''}" data-j="${n}"
-      aria-label="Case ${n}${ouverte?' (ouverte)':verrou?' (pas encore)':''}" ${verrou?'aria-disabled="true"':''}>
-      <span class="s-dedans">${sBoule(n)}</span><span class="s-volet" aria-hidden="true">${n}</span></button>`; }).join('');
-  const reste=24-o.length;
-  const html=`<div class="s-avent"><h3>Calendrier de l'Avent</h3>
-    <p class="s-sous">Une case par jour jusqu'au 24 décembre. ${o.length}/24 boules sur le sapin${reste&&j?'':' 🎄'}.</p>
-    <div class="s-scene"><div class="s-sapin">${sSapin(o)}</div>
-      <div class="s-billet" aria-live="polite"><b>${j?`Case du ${j}`:'Patience…'}</b>${j? (o.includes(j)?AVENT_MSG[j-1]:'Ouvre la case du jour pour accrocher une boule au sapin.') : 'Le calendrier commence le 1er décembre.'}</div></div>
-    <div class="s-portes">${portes}</div></div>`;
-  flOuvrir(html,{label:"Calendrier de l'Avent", grand:true});
-  son('boiteamusique');
-  document.querySelectorAll('.s-porte').forEach(p=>p.addEventListener('click',e=>{
-    const n=+p.dataset.j, billet=document.querySelector('.s-avent .s-billet');
-    if(p.classList.contains('verrou')){ p.animate([{transform:'translateX(0)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(-2px)'},{transform:'none'}],{duration:300});
-      if(billet) billet.innerHTML=`<b>Case ${n}</b>Pas encore ! Reviens le ${n} décembre 😉`; return; }
-    const deja=p.classList.contains('ouverte');
-    if(!deja){ p.classList.add('ouverte'); const l=aventOuvertes(); if(!l.includes(n)){ l.push(n); try{ localStorage.setItem('ade-avent',JSON.stringify(l)); }catch(_){} }
-      const r=p.getBoundingClientRect(); setTimeout(()=>sCadeau(r.left+r.width/2,r.top+r.height/2),250); son('epingle');
-      const sap=document.querySelector('.s-avent .s-sapin'); if(sap){ sap.innerHTML=sSapin(aventOuvertes()); sap.style.transformOrigin='50% 100%'; if(!sCalme()) sap.animate([{transform:'scale(1)'},{transform:'scale(1.06,.95)'},{transform:'scale(.98,1.03)'},{transform:'none'}],{duration:500,delay:300}); }
-      const sous=document.querySelector('.s-avent .s-sous'); if(sous) sous.textContent=`Une case par jour jusqu'au 24 décembre. ${aventOuvertes().length}/24 boules sur le sapin.`;
-      majBoutonAvent(); }
-    if(billet){ billet.innerHTML=`<b>Case du ${n}</b>${AVENT_MSG[n-1]}`; if(!sCalme()) billet.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.23,1,.32,1)'}); }
-  }));
-}
-
 /* ── Chef d'orchestre : construit / retire tout le décor « en plus » ── */
 function noelPlus(){
   _sTimers.forEach(clearTimeout); _sTimers=[];
@@ -12973,7 +13079,7 @@ function noelPlus(){
   // bonhomme de neige des états vides (variable CSS, réutilisée par .cal-empty::before)
   const svg=sPix(SP.bonhomme,PAL_C).replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');
   document.documentElement.style.setProperty('--s-bonhomme',`url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
-  sAmbiance(); sCompte(); majBoutonAvent();
+  sAmbiance(); sCompte();
   setTimeout(()=>Boules.construire(), document.getElementById('splash')?1400:150);
   if(sCalme()) return;
   // Apparitions rares : traîneau ~ toutes les 3 min (1re fois à 14 s), pingouin ~ toutes les 1,5 min (1re fois à 24 s)
@@ -12983,6 +13089,13 @@ function noelPlus(){
 }
 (()=>{ const d0=decorerSaison; decorerSaison=function(){ d0(); noelPlus(); }; })();
 noelPlus();
+
+/* Clavier virtuel : hauteur cachée par le clavier → --kb (iOS n'applique pas interactive-widget) */
+if(window.visualViewport){
+  const majKb=()=>{ const kb=Math.max(0, Math.round(innerHeight - visualViewport.height - visualViewport.offsetTop));
+    document.documentElement.style.setProperty('--kb', (kb>80?kb:0)+'px'); };
+  visualViewport.addEventListener('resize',majKb); visualViewport.addEventListener('scroll',majKb);
+}
 </script>
 </body>
 </html>
